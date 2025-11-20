@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- Fundo com estrelas animadas -->
+    <video autoplay muted loop playsinline class="background-video">
+      <source src="/CALCULADORA.mp4" type="video/mp4" />
+      Seu navegador não suporta vídeos HTML5.
+    </video>
+
+    <!-- Overlay opcional para melhorar legibilidade -->
+    <div class="video-overlay"></div>
+    <!-- Conteúdo principal -->
+    <div class="main-content">
+      <div class="love-calculator-modal">
+        <!-- Header -->
+        <div class="love-header">
+          <div class="love-expert-info">
+            <div class="interpreter-avatar">
+              <img
+                class="mystical-orb-image"
+                src="/Maestra-9.webp"
+                alt="Maestra Avatar"
+              />
+            </div>
+            <div class="expert-details" *ngIf="loveExpertInfo">
+              <!-- Primeira linha: nome + ícone + título juntos -->
+              <div class="name-title-row">
+                <h3>{{ loveExpertInfo.loveExpert.name }}</h3>
+                <span class="separator-icon">»</span>
+                <p class="interpreter-title">
+                  {{ loveExpertInfo.loveExpert.title }}
+                </p>
+              </div>
+              <!-- Segunda linha: especialidade abaixo EM MAIÚSCULAS -->
+              <p class="interpreter-specialty">
+                Canalizadora do amor universal e numerologia amorosa
+              </p>
+            </div>
+          </div>
+          <button
+            class="close-chat-btn"
+            onclick="window.location.href='/'"
+            aria-label="Fechar"
+          >
+            <svg class="close-icon" width="12" height="12" viewBox="0 0 12 12">
+              <path
+                d="M1 1L11 11M1 11L11 1"
+                stroke="gray"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="chat-messages" #scrollContainer (scroll)="onScroll($event)">
+          <!-- Modifica a estrutura da mensagem para mover a hora dentro do message-text -->
+          <div
+            *ngFor="let message of conversationHistory; trackBy: trackByMessage"
+            class="message"
+            [ngClass]="{
+              'user-message': message.role === 'user',
+              'expert-message': message.role === 'love_expert'
+            }"
+          >
+            <div class="message-avatar" *ngIf="message.role === 'love_expert'">
+              <img
+                *ngIf="message.role === 'love_expert'"
+                class="interpreter-avatar-small"
+                src="/Maestra-9.webp"
+                alt="Maestra Avatar"
+              />
+            </div>
+
+            <div
+              class="message-content"
+              [ngClass]="{ 'blocked-content': isMessageBlocked(message) }"
+            >
+              <div class="message-text">
+                <div [innerHTML]="formatMessage(message.message)"></div>
+                <!-- MOVER A HORA DENTRO DO message-text -->
+                <span
+                  class="message-time"
+                  *ngIf="
+                    message.role === 'love_expert' || message.role === 'user'
+                  "
+                >
+                  {{ formatTime(message.timestamp) }}
+                </span>
+              </div>
+
+              <!-- Overlay para mensagens bloqueadas -->
+              <div *ngIf="isMessageBlocked(message)" class="blocked-overlay">
+                <div class="blocked-message">
+                  <mat-icon>lock</mat-icon>
+                  <p>Conteúdo bloqueado</p>
+                  <small
+                    >Realize o pagamento para ver esta resposta completa</small
+                  >
+                  <button
+                    class="unlock-button"
+                    (click)="openDataModalForPayment()"
+                  >
+                    Desbloquear por 4.00€
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="message-avatar" *ngIf="message.role === 'user'">
+              <img
+                *ngIf="message.role === 'user'"
+                class="user-avatar-image"
+                src="/Visitante.webp"
+                alt="Usuário Avatar"
+              />
+            </div>
+          </div>
+
+          <!-- Loading indicator -->
+
+          <div *ngIf="isLoading" class="loading-message">
+            <div class="loading-avatar">
+              <span class="avatar-icon">
+                <img
+                  class="interpreter-avatar-small"
+                  src="/Maestra-9.webp"
+                  alt="Maestra Avatar"
+                />
+              </span>
+            </div>
+            <div class="loading-content">
+              <div class="loading-dots">
+                <div class="dots-container">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <!-- MOVER O TEXTO DENTRO DE loading-dots -->
+                <span class="loading-text">
+                  Maestra Valentina está consultando os números do amor...
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Typing indicator -->
+          <div *ngIf="isTyping && !isLoading" class="typing-message">
+            <div class="typing-avatar">
+              <span class="avatar-icon">💕</span>
+            </div>
+            <div class="typing-content">
+              <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="chat-input-area">
+          <div class="message-input">
+            <textarea
+              #messageTextarea
+              placeholder="Pergunte sobre amor e compatibilidade..."
+              [(ngModel)]="currentMessage"
+              (input)="adjustTextareaHeight($event)"
+              (keydown.enter)="onEnterPressed($any($event))"
+              [style.height.px]="textareaHeight"
+              maxlength="1000"
+            ></textarea>
+            <div
+              class="character-count"
+              *ngIf="(currentMessage?.length || 0) > 800"
+            >
+              {{ currentMessage || 0 }}/1000
+            </div>
+          </div>
+
+          <div class="input-buttons">
+            <button
+              mat-fab
+              class="reset-button"
+              (click)="resetChat()"
+              [disabled]="isLoading"
+              matTooltip="Reiniciar chat"
+              matTooltipPosition="above"
+            >
+              <i class="fas fa-redo"></i>
+            </button>
+
+            <button
+              mat-fab
+              class="send-button"
+              id="send-button"
+              (click)="sendMessage()"
+              [disabled]="!canSendMessage() || isLoading"
+              matTooltip="Enviar mensagem"
+              matTooltipPosition="above"
+            >
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <app-recolecta-datos
+        *ngIf="showDataModal"
+        (onDataSubmitted)="onUserDataSubmitted($event)"
+        (onModalClosed)="onDataModalClosed()"
+      >
+      </app-recolecta-datos>
+    </div>
+
+    <!-- Modal de Pagamento -->
+    <div
+      *ngIf="showPaymentModal"
+      class="payment-modal-overlay"
+      (click)="cancelPayment()"
+    >
+      <div class="payment-modal" (click)="$event.stopPropagation()">
+        <div class="payment-header">
+          <h3>💕 Acesso Completo a Leituras de Amor</h3>
+          <button
+            mat-icon-button
+            (click)="cancelPayment()"
+            class="close-payment-btn"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <div class="payment-content">
+          <div class="payment-info">
+            <div class="pricing">
+              <div class="price">
+                <span class="currency">€</span>
+                <span class="amount">4.00</span>
+                <span class="period">uma só vez</span>
+              </div>
+              <p class="price-note">Pagamento único para acesso ilimitado</p>
+            </div>
+          </div>
+
+          <!-- Contenedor do elemento de pagamento do Stripe -->
+          <div class="payment-form-container">
+            <div
+              *ngIf="isProcessingPayment "
+              class="payment-loading"
+            >
+              <mat-spinner diameter="40"></mat-spinner>
+              <p>Preparando formulário de pagamento...</p>
+            </div>
+
+            <div
+              id="payment-element-container-love"
+              class="stripe-payment-element"
+            ></div>
+
+            <div *ngIf="paymentError" class="payment-error">
+              <mat-icon color="warn">error</mat-icon>
+              <span>{{ paymentError }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="payment-actions">
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="handlePaymentSubmit()"
+            [disabled]="isProcessingPayment "
+          >
+            <mat-spinner
+              *ngIf="isProcessingPayment"
+              diameter="20"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isProcessingPayment">payment</mat-icon>
+            {{ isProcessingPayment ? "Processando..." : "Realizar Pagamento" }}
+          </button>
+          <button
+            mat-stroked-button
+            (click)="cancelPayment()"
+            [disabled]="isProcessingPayment"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+    <app-fortune-wheel
+      *ngIf="showFortuneWheel"
+      [isVisible]="showFortuneWheel"
+      [prizes]="lovePrizes"
+      (onPrizeWon)="onPrizeWon($event)"
+      (onWheelClosed)="onWheelClosed()"
+    >
+    </app-fortune-wheel>
+  </body>
+</html>

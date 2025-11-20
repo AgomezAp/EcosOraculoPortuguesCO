@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- Fundo com estrelas animadas -->
+    <video autoplay muted loop playsinline class="background-video">
+      <source src="/CARTANATAL.mp4" type="video/mp4" />
+      Seu navegador não suporta vídeos HTML5.
+    </video>
+
+    <!-- Overlay opcional para melhorar legibilidade -->
+    <div class="video-overlay"></div>
+
+    <!-- Conteúdo principal -->
+    <div class="main-content">
+      <div class="birth-chart-modal">
+        <!-- Header -->
+        <div class="birth-chart-header">
+          <div class="astrologer-info">
+            <div class="interpreter-avatar">
+              <img
+                class="mystical-orb-image"
+                src="/Maestra-6.webp"
+                alt="Avatar da Mestra"
+              />
+            </div>
+            <div class="interpreter-details">
+              <!-- Primeira linha: nome + ícone + título juntos -->
+              <div class="name-title-row">
+                <h3>Mestra Emma</h3>
+                <span class="separator-icon">»</span>
+                <p class="interpreter-title">
+                  Guardiã das Configurações Celestiais
+                </p>
+              </div>
+              <!-- Segunda linha: especialidade abaixo EM MAIÚSCULAS -->
+              <p class="interpreter-specialty">
+                Especialista em cartas natais e astrologia transpessoal
+              </p>
+            </div>
+          </div>
+          <button
+            class="close-chat-btn"
+            onclick="window.location.href='/'"
+            aria-label="Fechar"
+          >
+            <svg class="close-icon" width="12" height="12" viewBox="0 0 12 12">
+              <path
+                d="M1 1L11 11M1 11L11 1"
+                stroke="gray"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div
+          class="chat-messages"
+          #chatContainer
+          (scroll)="onScroll($event)"
+          (mousedown)="onUserStartScroll()"
+          (wheel)="onUserStartScroll()"
+        >
+          <div
+            *ngFor="let message of messages"
+            class="message"
+            [ngClass]="{
+              'user-message': message.isUser,
+              'astrologer-message': !message.isUser
+            }"
+          >
+            <div class="message-avatar" *ngIf="!message.isUser">
+              <img
+                class="interpreter-avatar-small"
+                src="/Maestra-6.webp"
+                alt="Avatar da Mestra"
+              />
+            </div>
+
+            <div class="message-content">
+              <div class="message-text">
+                <div [innerHTML]="formatMessage(message.content)"></div>
+                <span
+                  class="message-time"
+                  *ngIf="!message.isUser || message.isUser"
+                >
+                  {{ message.timestamp | date : "HH:mm" }}
+                </span>
+              </div>
+            </div>
+
+            <div class="message-avatar" *ngIf="message.isUser">
+              <img
+                class="user-avatar-image"
+                src="/Visitante.webp"
+                alt="Avatar do Usuário"
+              />
+            </div>
+          </div>
+
+          <!-- Loading indicator -->
+          <div *ngIf="isLoading" class="loading-message">
+            <div class="loading-avatar">
+              <span class="avatar-icon">
+                <img
+                  class="interpreter-avatar-small"
+                  src="/Maestra-6.webp"
+                  alt="Avatar da Mestra"
+              /></span>
+            </div>
+            <div class="loading-content">
+              <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <span class="loading-text"
+                >Mestra Astra está consultando as configurações
+                celestiais...</span
+              >
+            </div>
+          </div>
+        </div>
+        <!-- Input Area -->
+        <div class="chat-input-area">
+          <div class="input-container">
+            <div class="text-input-wrapper">
+              <textarea
+                class="message-input"
+                [(ngModel)]="currentMessage"
+                placeholder="Pergunte sobre sua tabela de nascimento..."
+                (input)="autoResize($event)"
+                (keydown)="onKeyPress($event)"
+                [disabled]="isLoading"
+                rows="1"
+              >
+              </textarea>
+            </div>
+
+            <div class="action-buttons">
+              <button
+                class="clear-button"
+                (click)="clearChat()"
+                title="Limpar chat"
+              >
+                <i class="fas fa-redo"></i>
+              </button>
+              <button
+                class="send-button"
+                id="send-button"
+                (click)="sendMessage()"
+                [disabled]="!currentMessage.trim() || isLoading"
+                title="Enviar mensagem"
+              >
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <app-recolecta-datos
+        *ngIf="showDataModal"
+        (onDataSubmitted)="onUserDataSubmitted($event)"
+        (onModalClosed)="onDataModalClosed()"
+      >
+      </app-recolecta-datos>
+    </div>
+
+    <!-- ===== MODAL DE PAGAMENTO ===== -->
+    <div *ngIf="showPaymentModal" class="payment-modal-overlay">
+      <div class="payment-modal">
+        <div class="payment-header">
+          <h3>🌟 Desbloquear Sabedoria Celestial</h3>
+          <button class="close-payment-button" (click)="cancelPayment()">
+            ✕
+          </button>
+        </div>
+
+        <div class="payment-content">
+          <div class="payment-info">
+            <p>Acesse leituras ilimitadas com Mestra Emma</p>
+            <p>Descubra todos os segredos da sua carta natal</p>
+          </div>
+
+          <div class="payment-price">
+            <span class="price-amount">4.00€</span>
+            <p class="price-description">Acesso completo e ilimitado</p>
+          </div>
+
+          <div
+            *ngIf="isProcessingPayment"
+            class="payment-loading"
+          >
+            <div class="loading-spinner"></div>
+            <p>Preparando o pagamento...</p>
+          </div>
+
+          <div *ngIf="paymentError" class="payment-error">
+            {{ paymentError }}
+          </div>
+
+          <div
+            *ngIf="!isProcessingPayment "
+            id="payment-element-container-birth-chart"
+            class="payment-element-container"
+          ></div>
+
+          <div class="payment-actions">
+            <button
+              *ngIf="!isProcessingPayment "
+              class="pay-button"
+              (click)="handlePaymentSubmit()"
+              [disabled]="isProcessingPayment"
+            >
+              {{ isProcessingPayment ? "Processando..." : "Pagar 4.00€" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <app-fortune-wheel
+      [isVisible]="showFortuneWheel"
+      [prizes]="birthChartPrizes"
+      (onPrizeWon)="onPrizeWon($event)"
+      (onWheelClosed)="onWheelClosed()"
+    >
+    </app-fortune-wheel>
+  </body>
+</html>

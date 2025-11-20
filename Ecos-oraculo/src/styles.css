@@ -1,0 +1,29 @@
+/* You can add global styles to this file, and also import other style files */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+app-root {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ✅ ELIMINAR MÁRGENES DEL COMPONENTE ANGULAR */
+app-bienvenida {
+  display: block;
+  width: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+}

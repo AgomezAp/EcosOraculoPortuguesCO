@@ -1,0 +1,459 @@
+/* Modal Overlay - AUMENTAR Z-INDEX */
+.data-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10002; /* Aumentado para estar sobre mapa vocacional */
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Modal Container - ASEGURAR SCROLL */
+.data-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto; /* Mantener scroll */
+  overflow-x: hidden; /* Evitar scroll horizontal */
+  position: relative;
+  border: 1px solid #e1e5e9;
+  animation: slideIn 0.3s ease-out;
+  z-index: 10003; /* Asegurar que esté sobre el overlay */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header - STICKY PARA QUE SE MANTENGA VISIBLE AL HACER SCROLL */
+.data-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px 25px;
+  border-radius: 15px 15px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e1e5e9;
+  position: sticky;
+  top: 0;
+  z-index: 10; /* Relativo al modal */
+  flex-shrink: 0;
+}
+
+.data-header h3 {
+  color: #495057;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: none;
+}
+
+.close-data-button {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #6c757d;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  z-index: 11;
+}
+
+.close-data-button:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  color: #495057;
+  transform: scale(1.05);
+}
+
+/* Content - FLEX PARA PERMITIR SCROLL CORRECTO */
+.data-content {
+  padding: 30px;
+  color: #495057;
+  text-align: center;
+  flex: 1;
+  overflow-y: auto; /* Permitir scroll interno si es necesario */
+  min-height: 0; /* Importante para flex scroll */
+}
+
+.data-info {
+  margin-bottom: 20px;
+}
+
+.data-info p {
+  font-size: 1rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+/* Form - Simplificado para email únicamente */
+.form-section {
+  margin-bottom: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.form-section h4 {
+  display: none;
+}
+
+/* Campo de email centrado */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Labels con checkboxes - alineados horizontalmente */
+.form-group label {
+  color: #495057;
+  font-weight: 400;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  line-height: 1.4;
+}
+
+.form-group label input[type="checkbox"] {
+  min-width: 18px;
+  min-height: 18px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.form-group label a {
+  color: #0066cc;
+  text-decoration: underline;
+}
+
+.form-group label a:hover {
+  color: #0056b3;
+}
+
+/* Checkbox group - Solo info, sin checkbox */
+.form-group.checkbox-group {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.checkbox-text {
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin: 0;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Input de email - Más prominente */
+.form-group input[type="email"],
+.form-group input[type="text"] {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #ced4da;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #495057;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.form-group input[type="email"]:focus,
+.form-group input[type="text"]:focus {
+  outline: none;
+  border-color: #0066cc;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
+}
+
+.form-group input::placeholder {
+  color: #adb5bd;
+  text-align: center;
+}
+
+.form-group input[readonly] {
+  background: #f8f9fa;
+  border-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.form-group small {
+  color: #6c757d;
+  font-size: 0.85rem;
+  margin-top: 5px;
+  text-align: center;
+}
+
+/* Error States */
+.form-group input.error {
+  border-color: #dc3545;
+  background: #fff5f5;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 5px;
+  display: block;
+  text-align: center;
+}
+
+.general-error {
+  background: #fff5f5;
+  border: 1px solid #f5c2c7;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 15px 0;
+  text-align: center;
+  font-weight: 500;
+  color: #842029;
+}
+
+/* Loading State */
+.data-loading {
+  text-align: center;
+  padding: 20px;
+  color: #6c757d;
+}
+
+.loading-spinner {
+  border: 3px solid #e9ecef;
+  border-top: 3px solid #0066cc;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px;
+}
+
+/* Action Buttons - Centrados y prominentes */
+.data-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+  flex-shrink: 0; /* No comprimir los botones */
+}
+
+.cancel-button,
+.continue-button {
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid;
+  min-width: 120px;
+}
+
+.cancel-button {
+  background: #ffffff;
+  color: #6c757d;
+  border-color: #ced4da;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+  color: #495057;
+}
+
+.continue-button {
+  background: #0066cc;
+  color: #ffffff;
+  border-color: #0066cc;
+}
+
+.continue-button:hover:not(:disabled) {
+  background: #0056b3;
+  border-color: #0056b3;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+  transform: translateY(-1px);
+}
+
+.cancel-button:disabled,
+.continue-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design - Optimizado para móvil */
+@media (max-width: 768px) {
+  .data-modal {
+    max-width: 95%;
+    max-height: 85vh;
+  }
+
+  .data-header {
+    padding: 15px 20px;
+  }
+
+  .data-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .data-content {
+    padding: 20px;
+  }
+
+  .form-group {
+    max-width: 100%;
+  }
+
+  .form-group label {
+    font-size: 0.85rem;
+  }
+
+  .form-group input[type="email"],
+  .form-group input[type="text"] {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+
+  .checkbox-text {
+    font-size: 0.85rem;
+  }
+
+  .data-actions {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .cancel-button,
+  .continue-button {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .data-modal {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 0;
+  }
+
+  .data-header {
+    border-radius: 0;
+  }
+
+  .data-content {
+    padding: 15px;
+  }
+
+  .form-group label {
+    font-size: 0.8rem;
+  }
+
+  .form-group input[type="email"],
+  .form-group input[type="text"] {
+    padding: 12px;
+  }
+
+  .checkbox-text {
+    font-size: 0.8rem;
+  }
+}
+
+/* Scrollbar Styling - MEJORADO */
+.data-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.data-modal::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.data-modal::-webkit-scrollbar-thumb {
+  background: #ced4da;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.data-modal::-webkit-scrollbar-thumb:hover {
+  background: #adb5bd;
+}
+
+/* Scroll interno del contenido */
+.data-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.data-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.data-content::-webkit-scrollbar-thumb {
+  background: #dee2e6;
+  border-radius: 3px;
+}
+
+.data-content::-webkit-scrollbar-thumb:hover {
+  background: #ced4da;
+}

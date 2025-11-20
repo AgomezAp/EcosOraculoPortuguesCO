@@ -1,0 +1,2093 @@
+.close-chat-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 30px;
+  height: 30px;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  padding: 0;
+}
+
+.close-chat-btn:hover {
+  background: #ffffff80;
+}
+
+.close-icon {
+  width: 12px;
+  height: 12px;
+}
+
+/* ===== VIDEO DE FONDO ===== */
+.background-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* Overlay opcional para mejorar legibilidad */
+.video-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Contenedor de fondo actualizado para funcionar con video */
+.background-container {
+  /* Eliminar propiedades de fondo estático */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -3; /* Mover atrás del video */
+}
+
+/* Eliminar elementos de estrellas animadas ya que usamos video */
+.stars,
+.twinkling,
+.clouds {
+  display: none;
+}
+
+/* Contenedor principal con z-index actualizado */
+.main-content {
+  min-height: 100vh;
+  width: 100%;
+  /* Eliminar propiedades de imagen de fondo */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 20px;
+  overflow: hidden;
+  z-index: 1; /* Asegurar que esté sobre el video */
+}
+
+/* Contenedor principal de la calculadora de amor con z-index alto */
+.love-calculator-modal {
+  font-family: "Arsenal", sans-serif !important;
+  font-weight: regular !important;
+  font-size: 18px !important;
+  background-color: #00000026;
+  border-radius: 25px;
+  max-width: 1200px;
+  width: 95%;
+  height: calc(100vh - 40px);
+  margin: 0 auto;
+  position: relative;
+  color: white;
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 15px;
+  z-index: 2; /* Asegurar que esté sobre el video */
+}
+
+/* Header del componente de amor con z-index alto */
+.love-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #2a1c36, #773a58);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  position: relative;
+  flex-shrink: 0;
+  margin-bottom: 12px;
+  z-index: 2;
+  min-height: 65px;
+}
+
+.love-expert-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.expert-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #ff69b4, #ff1493);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 8px 16px rgba(255, 105, 180, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.expert-icon {
+  font-size: 20px;
+}
+.expert-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.name-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.expert-details h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 100;
+  font-family: "Berkshire Swash", cursive;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+.separator-icon {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 1.2;
+  margin: 0 2px;
+}
+.close-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+/* Área de mensajes de chat con z-index alto */
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 0 0 12px 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 12px;
+  overflow-y: auto;
+  gap: 12px;
+  z-index: 3; /* Asegurar que esté sobre el video */
+}
+
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: message-appear 0.3s ease-out;
+  margin: 0 8px;
+  position: relative;
+  width: calc(100% - 16px); /* Asegurar que use todo el ancho disponible */
+}
+
+@keyframes message-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* MEJORAR ALINEACIÓN DE MENSAJES DEL USUARIO */
+.user-message {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  margin-left: auto; /* Empujar hacia la derecha */
+  margin-right: 0;
+  max-width: 85%; /* Limitar ancho máximo */
+}
+
+.expert-message {
+  justify-content: flex-start;
+  margin-right: auto; /* Mantener a la izquierda */
+  margin-left: 0;
+  max-width: 85%; /* Limitar ancho máximo */
+}
+
+/* Avatar posicionado en la esquina del globo de texto */
+.message-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  position: absolute;
+  z-index: 10;
+}
+
+/* Posicionamiento del avatar para mensajes del usuario */
+.user-message .message-avatar {
+  background-color: #2a1c36;
+  border: 1px solid #773a58;
+  top: -5px;
+  right: -6px;
+}
+
+/* Posicionamiento del avatar para mensajes del experto */
+.expert-message .message-avatar {
+  background-color: #2a1c36;
+  border: 1px solid #773a58;
+  top: -5px;
+  left: -5px;
+}
+
+.avatar-icon {
+  font-size: 16px;
+}
+.unlock-button {
+  /* Variables locales */
+  --btn-primary: #6a4c93;
+  --btn-secondary: #8b5a96;
+  --btn-shadow: 0 3px 12px rgba(106, 76, 147, 0.25);
+  --btn-shadow-hover: 0 6px 20px rgba(106, 76, 147, 0.35);
+  --btn-transition: all 0.2s ease;
+  
+  background: linear-gradient(135deg, var(--btn-primary), var(--btn-secondary));
+  color: white;
+  border: none;
+  padding: 14px 24px;  /* Más espacio vertical y horizontal */
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--btn-transition);
+  font-family: inherit;
+  font-size: 14px;      /* Texto un poco más grande */
+  width: 100%;
+  box-shadow: var(--btn-shadow);
+  letter-spacing: 0.3px;
+  min-height: 48px;     /* Altura mínima para que no se vea aplastado */
+}
+
+.unlock-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--btn-shadow-hover);
+  filter: brightness(1.05);
+}
+
+.unlock-button:active {
+  transform: translateY(0);
+  transition: all 0.1s ease;
+}
+/* MEJORAR CONTENIDO DE MENSAJES */
+.message-content {
+  max-width: 100%;
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ajustar padding del contenido para dar espacio al avatar */
+.user-message .message-content {
+  padding-right: 25px; /* Espacio para el avatar */
+  align-items: flex-end; /* Alinear a la derecha */
+}
+
+.expert-message .message-content {
+  padding-left: 40px; /* Espacio para el avatar */
+  align-items: flex-start; /* Alinear a la izquierda */
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+  width: 100%;
+}
+
+.message-time {
+  font-size: 0.65rem;
+  display: block;
+  text-align: right;
+  margin-top: 4px;
+  font-family: "Arsenal", sans-serif !important;
+}
+.interpreter-message .message-time {
+  color: #ffffff;
+}
+
+/* Hora para mensajes del usuario (negra) */
+.user-message .message-time {
+  color: #000000; /* Negro para contraste con el fondo blanco */
+}
+
+/* MEJORAR BURBUJAS DE MENSAJE */
+.message-text {
+  padding: 12px 19px;
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  width: fit-content; /* Ajustar al contenido */
+  min-width: 100px; /* Ancho mínimo */
+}
+
+.user-message .message-text {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  color: #333;
+  padding-top: 20px;
+  padding-right: 25px;
+  margin-left: auto; /* Empujar hacia la derecha */
+  text-align: left; /* Mantener texto alineado a la izquierda dentro de la burbuja */
+  right: 11px;
+}
+
+.user-message .message-text p {
+  color: #333;
+  font-family: "Arsenal", sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.4;
+  margin: 0;
+  text-align: left;
+}
+
+.expert-message .message-text {
+  background: linear-gradient(135deg, #773a58, #2a1c36);
+  border: 1px solid #773a58;
+  color: white;
+  padding-top: 20px;
+  padding-left: 25px;
+  padding-bottom: 28px; /* Añade espacio extra para la hora */
+  margin-right: auto;
+  position: relative; /* Importante para posicionar la hora */
+}
+
+.expert-message .message-text p {
+  color: white;
+  font-family: "Berkshire Swash", cursive;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Overlay para contenido bloqueado */
+.blocked-content {
+  position: relative;
+}
+
+.blocked-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  z-index: 10;
+}
+
+.blocked-message {
+  text-align: center;
+  padding: 15px;
+  max-width: 200px;
+  color: #333;
+}
+
+.blocked-message mat-icon {
+  font-size: 20px;
+  display: block;
+  margin-bottom: 8px;
+  color: #ff1493;
+}
+
+.blocked-message p {
+  margin: 4px 0;
+  color: #333;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.blocked-message small {
+  color: #666;
+  font-size: 11px;
+}
+
+/* Loading indicator */
+.loading-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: message-appear 0.3s ease-out;
+  margin: 0 8px;
+  position: relative;
+}
+
+.loading-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #ff1493, #c7158b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  z-index: 10;
+}
+
+.loading-content {
+  max-width: 80%;
+  padding-left: 40px;
+}
+
+.loading-dots {
+  padding: 12px 20px 16px 25px; /* Aumentar padding inferior */
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #773a58, #2a1c36);
+  border: 1px solid rgba(255, 20, 147, 0.5);
+  display: flex;
+  flex-direction: column; /* Cambiar a columna para apilar puntos y texto */
+  gap: 8px; /* Espacio entre puntos y texto */
+  margin-bottom: 4px;
+  min-height: 50px; /* Altura mínima para la burbuja */
+}
+.dots-container {
+  display: flex;
+  gap: 3px;
+  justify-content: flex-start; /* Alinear puntos a la izquierda */
+}
+.loading-dots .dots-container span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: white;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+.loading-dots .dots-container span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots .dots-container span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.loading-text {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-style: italic;
+  margin: 0;
+  font-family: "Arsenal", regular;
+  padding: 0; /* Quitar padding ya que está dentro de loading-dots */
+  line-height: 1.3;
+  text-align: left;
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+/* Typing indicator */
+.typing-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: message-appear 0.3s ease-out;
+  margin: 0 8px;
+  position: relative;
+}
+
+.typing-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #ff1493, #c7158b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  z-index: 10;
+}
+
+.typing-content {
+  max-width: 80%;
+  padding-left: 40px;
+}
+
+.typing-dots {
+  padding: 12px 16px;
+  padding-top: 20px;
+  padding-left: 25px;
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #ff1493 0%, #c7158b 100%);
+  border: 1px solid rgba(255, 20, 147, 0.5);
+  display: flex;
+  gap: 3px;
+}
+
+.typing-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: white;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+/* Formulario de datos de compatibilidad con z-index alto */
+.data-form-container {
+  background: rgba(
+    12,
+    12,
+    38,
+    0.7
+  ); /* Aumentar opacidad para mejor contraste */
+  border-radius: 20px;
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 0 0 12px 0;
+  padding: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 3; /* Asegurar que esté sobre el video */
+  position: relative;
+}
+
+.data-form h4 {
+  margin: 0 0 20px 0;
+  font-size: 1.2rem;
+  color: white;
+  text-align: center;
+  font-family: "Berkshire Swash", cursive;
+}
+
+.person-section {
+  margin-bottom: 25px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.person-section h5 {
+  margin: 0 0 15px 0;
+  font-size: 1rem;
+  color: #ff69b4;
+  font-family: "Berkshire Swash", cursive;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+/* Estilos para Angular Material en el formulario */
+.data-form ::ng-deep .mat-mdc-form-field {
+  width: 100%;
+}
+
+.data-form ::ng-deep .mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+}
+
+.data-form ::ng-deep .mat-mdc-form-field .mat-mdc-form-field-infix {
+  padding: 15px;
+}
+
+.data-form ::ng-deep .mat-mdc-form-field input {
+  color: #333;
+  font-family: "Arsenal", sans-serif;
+}
+
+.data-form ::ng-deep .mat-mdc-form-field .mat-mdc-floating-label {
+  color: #666;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.form-actions button {
+  min-width: 120px;
+  font-family: "Arsenal", sans-serif;
+}
+
+/* Área de entrada de chat con autoexpansión mejorada */
+.chat-input-area {
+  display: flex;
+  align-items: flex-end !important; /* Cambiar a flex-end para alinear botones al final */
+  gap: 10px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  z-index: 3; /* Asegurar que esté sobre el video */
+  position: relative;
+  min-height: 75px; /* Altura mínima del área */
+}
+
+.message-input {
+  flex: 1;
+  position: relative;
+}
+
+/* ESTILOS MEJORADOS PARA TEXTAREA CON AUTOEXPANSIÓN */
+.message-input textarea {
+  width: 100%;
+  min-height: 45px;
+  max-height: 120px;
+  background: white;
+  border-radius: 25px;
+  padding: 12px 20px;
+  resize: none;
+  font-family: "Arsenal", sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: #333;
+  outline: none;
+  transition: all 0.3s ease;
+  line-height: 1.4;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  vertical-align: top;
+  box-sizing: border-box;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+.message-input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+  font-family: "Arsenal", sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+}
+
+.character-count {
+  position: absolute;
+  bottom: 5px;
+  right: 15px;
+  font-size: 11px;
+  color: #666;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+/* Contenedor de botones */
+.input-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Botón de reset */
+.reset-button {
+  width: 45px;
+  height: 45px;
+  background: white;
+  color: #666;
+  border: 1px solid #e0e0e0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.reset-button:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #d0d0d0;
+  transform: scale(1.05);
+}
+
+.reset-button:disabled {
+  background: #f9f9f9;
+  color: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  border-color: #f0f0f0;
+}
+
+/* Botón de envío */
+.send-button {
+  width: 45px;
+  height: 45px;
+  background: #ff1493;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(255, 20, 147, 0.3);
+}
+
+.send-button:hover:not(:disabled) {
+  background: #e6127a;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(255, 20, 147, 0.4);
+}
+
+.send-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal de pago específico para amor con z-index máximo */
+.payment-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000; /* Aumentar z-index para estar sobre el video */
+  animation: modal-appear 0.3s ease-out;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(10px);
+  }
+}
+
+.payment-modal {
+  background: linear-gradient(
+    135deg,
+    rgba(199, 21, 133, 0.98) 0%,
+    rgba(255, 20, 147, 0.98) 50%,
+    rgba(255, 105, 180, 0.98) 100%
+  );
+  border-radius: 25px;
+  padding: 0;
+  max-width: 480px;
+  width: 92%;
+  max-height: calc(100vh - 40px);
+  color: white;
+  position: relative;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 20, 147, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 20, 147, 0.3);
+  overflow: hidden;
+  animation: modal-scale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  z-index: 10001; /* Asegurar que esté sobre el overlay */
+}
+
+@keyframes modal-scale {
+  from {
+    transform: scale(0.8) translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Header del modal de pago */
+.payment-header {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 20, 147, 0.9) 0%,
+    rgba(199, 21, 133, 0.8) 100%
+  );
+  padding: 25px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.payment-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.payment-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  font-family: "Berkshire Swash", cursive;
+}
+
+.close-payment-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.close-payment-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+/* Resto del CSS del modal de pago permanece igual... */
+.payment-content {
+  padding: 30px;
+  text-align: center;
+  position: relative;
+  overflow-y: auto;
+  flex: 1;
+  max-height: calc(100vh - 200px);
+}
+
+.payment-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.payment-content::-webkit-scrollbar-track {
+  background: rgba(255, 20, 147, 0.1);
+  border-radius: 4px;
+}
+
+.payment-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 20, 147, 0.4);
+  border-radius: 4px;
+}
+
+.payment-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 20, 147, 0.6);
+}
+
+.payment-info {
+  margin-bottom: 25px;
+}
+
+.love-package {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.package-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.love-package h4 {
+  margin: 15px 0 10px 0;
+  font-size: 1.3rem;
+  color: white;
+  font-family: "Berkshire Swash", cursive;
+}
+
+.package-description {
+  margin: 15px 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: "Arsenal", sans-serif;
+}
+
+.features-list {
+  text-align: left;
+  margin: 20px 0;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: "Arsenal", sans-serif;
+}
+
+.feature mat-icon {
+  color: #ffd700;
+}
+
+.pricing {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 20, 147, 0.2) 0%,
+    rgba(199, 21, 133, 0.1) 100%
+  );
+  border: 2px solid rgba(255, 20, 147, 0.3);
+  border-radius: 20px;
+  padding: 25px;
+  margin: 25px 0;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.pricing::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 20, 147, 0.1) 0%,
+    transparent 70%
+  );
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.currency {
+  font-size: 1.5rem;
+  color: #ffd700;
+  font-family: "Cinzel", serif;
+  margin-right: 5px;
+}
+
+.amount {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.5);
+  font-family: "Cinzel", serif;
+}
+
+.period {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-left: 5px;
+  font-family: "Arsenal", sans-serif;
+}
+
+.price-note {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-style: italic;
+  position: relative;
+  z-index: 1;
+  font-family: "Berkshire Swash", cursive;
+}
+
+/* Formulario de pago */
+.payment-form-container {
+  margin: 25px 0;
+}
+
+.payment-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.payment-loading p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-family: "Arsenal", sans-serif;
+}
+
+.stripe-payment-element {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.stripe-payment-element:focus-within {
+  border-color: rgba(255, 20, 147, 0.5);
+  box-shadow: 0 0 20px rgba(255, 20, 147, 0.2);
+}
+
+.payment-error {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  margin: 15px 0;
+  color: #ff8a8a;
+  font-size: 14px;
+  text-align: center;
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Acciones del modal */
+.payment-actions {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+}
+
+.payment-actions button {
+  min-width: 160px;
+  font-family: "Arsenal", sans-serif;
+}
+
+/* Seguridad del pago */
+.payment-security {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.security-badges {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.security-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-family: "Arsenal", sans-serif;
+}
+
+.stripe-badge {
+  background: #6772e5;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.security-text {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.4;
+  max-width: 300px;
+  margin: 0 auto;
+  font-family: "Arsenal", sans-serif;
+}
+
+/* Loading overlay general */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+.loading-overlay .loading-content {
+  text-align: center;
+  color: white;
+}
+
+.loading-overlay .loading-content p {
+  margin-top: 20px;
+  font-size: 0.75rem;
+  font-family: "Arsenal", sans-serif;
+}
+
+/* Scrollbar personalizado */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #2a1c36;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #773a58;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 20, 147, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .payment-modal {
+    max-width: 95%;
+    margin: 20px;
+  }
+
+  .payment-header {
+    padding: 20px 25px;
+  }
+
+  .payment-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .payment-content {
+    padding: 25px 20px;
+  }
+
+  .amount {
+    font-size: 2.5rem;
+  }
+
+  .main-content {
+    padding: 15px;
+  }
+
+  .love-calculator-modal {
+    height: calc(100vh - 30px);
+    border-radius: 20px;
+    max-width: 98%;
+    padding: 12px;
+  }
+
+  .love-header {
+    padding: 6px 15px;
+    margin-bottom: 10px;
+  }
+
+  .chat-messages {
+    padding: 10px;
+  }
+
+  .chat-input-area {
+    padding: 12px;
+    gap: 8px;
+    min-height: 65px; /* Altura mínima en tablet */
+  }
+
+  .message-input textarea {
+    min-height: 42px;
+    max-height: 100px; /* Altura máxima reducida en tablet */
+    padding: 10px 18px;
+  }
+
+  .reset-button,
+  .send-button {
+    width: 42px;
+    height: 42px;
+  }
+
+  /* Ajustes responsivos para mensajes */
+  .user-message,
+  .expert-message {
+    max-width: 90%;
+  }
+
+  .message-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  .user-message .message-content {
+    padding-right: 20px;
+  }
+
+  .expert-message .message-content {
+    padding-left: 35px;
+  }
+
+  .user-message .message-text {
+    padding-top: 18px;
+    padding-right: 20px;
+  }
+
+  .expert-message .message-text {
+    padding-top: 18px;
+    padding-left: 20px;
+  }
+
+  .data-form-container {
+    max-height: 300px;
+    padding: 15px;
+  }
+
+  .person-section {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-modal {
+    max-width: 98%;
+    margin: 10px;
+  }
+
+  .payment-header {
+    padding: 18px 20px;
+  }
+
+  .payment-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .payment-content {
+    padding: 20px 18px;
+  }
+
+  .pricing {
+    padding: 20px;
+    margin: 20px 0;
+  }
+
+  .amount {
+    font-size: 2.2rem;
+  }
+
+  .close-payment-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+
+  .main-content {
+    padding: 10px;
+  }
+
+  .love-calculator-modal {
+    height: calc(100vh - 20px);
+    padding: 10px;
+  }
+
+  .love-header {
+    padding: 6px 12px;
+    margin-bottom: 8px;
+  }
+
+  .chat-messages {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .message {
+    margin: 0 4px;
+    gap: 8px;
+  }
+
+  .message-text {
+    padding: 10px 14px;
+  }
+  .message-time {
+    font-size: 0.6rem;
+    bottom: 6px;
+    right: 12px;
+  }
+  .message-avatar {
+    width: 25px;
+    height: 25px;
+    font-size: 12px;
+  }
+
+  .chat-input-area {
+    padding: 10px;
+    gap: 6px;
+    min-height: 60px; /* Altura mínima en móvil */
+  }
+
+  .message-input textarea {
+    min-height: 40px;
+    max-height: 90px; /* Altura máxima reducida en móvil */
+    padding: 10px 16px;
+    font-size: 16px; /* Importante: mantener 16px para evitar zoom automático */
+  }
+
+  .reset-button,
+  .send-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .user-message .message-content {
+    padding-right: 15px;
+  }
+
+  .expert-message .message-content,
+  .loading-content,
+  .typing-content {
+    padding-left: 30px;
+  }
+
+  .user-message .message-text {
+    padding-top: 15px;
+    padding-right: 18px;
+  }
+
+  .expert-message .message-text,
+  .loading-dots,
+  .typing-dots {
+    padding-top: 15px;
+    padding-left: 18px;
+  }
+
+  /* Ajustes para móviles */
+  .user-message,
+  .expert-message {
+    max-width: 95%;
+  }
+
+  .data-form-container {
+    max-height: 250px;
+    padding: 12px;
+  }
+
+  .person-section {
+    padding: 10px;
+    margin-bottom: 15px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-actions button {
+    min-width: 100px;
+    width: 100%;
+  }
+}
+
+/* Estilos adicionales para iconos de los botones */
+.reset-button i,
+.send-button i {
+  font-size: 16px;
+}
+
+@media (max-width: 480px) {
+  .reset-button i,
+  .send-button i {
+    font-size: 14px;
+  }
+}
+
+/* Animaciones de entrada/salida para mejor UX */
+.payment-modal-overlay.ng-enter {
+  animation: modal-appear 0.3s ease-out;
+}
+
+.payment-modal-overlay.ng-leave {
+  animation: modal-disappear 0.2s ease-in;
+}
+
+@keyframes modal-disappear {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(10px);
+  }
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+}
+.interpreter-avatar {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.interpreter-avatar-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mystical-orb-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #773a58;
+}
+.user-avatar-image {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.interpreter-title {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-family: "Arsenal", sans-serif;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.interpreter-specialty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: "Arsenal", sans-serif;
+  font-style: italic;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+/* ===== MEDIA QUERIES PARA MÓVILES - CONSERVANDO TODA LA INFORMACIÓN ===== */
+@media (max-width: 768px) {
+  /* Contenedor principal */
+  .main-content {
+    padding: 10px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .love-calculator-modal {
+    height: calc(100vh - 20px);
+    width: 100%;
+    max-width: calc(100vw - 20px);
+    border-radius: 15px;
+    padding: 8px;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  /* HEADER - Manteniendo toda la información visible */
+  .love-header {
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: 15px;
+    min-height: 60px;
+    gap: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .love-expert-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Avatar ajustado pero visible */
+  .expert-avatar,
+  .mystical-orb-image {
+    width: 38px;
+    height: 38px;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .expert-icon {
+    font-size: 17px;
+  }
+
+  /* Información del experto - asegurar que todo se vea */
+  .expert-details {
+    flex: 1;
+    gap: 1px;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* Fila del nombre y título - SIN wrap para mantener en una línea */
+  .name-title-row {
+    gap: 4px;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    display: flex;
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Nombre - reducido pero legible */
+  .expert-details h3 {
+    font-size: 0.95rem !important;
+    line-height: 1.1;
+    margin: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Separador visible */
+  .separator-icon {
+    font-size: 0.8rem !important;
+    margin: 0 1px;
+    flex-shrink: 0;
+  }
+
+  /* Título - MÁS PEQUEÑO para que quepa "GUARDIANA DEL AMOR" */
+  .interpreter-title {
+    font-size: 0.65rem !important; /* Reducido significativamente */
+    line-height: 1.1;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1;
+    font-weight: bold;
+    letter-spacing: 0.2px;
+  }
+
+  /* Especialidad - más pequeña pero visible */
+  .interpreter-specialty {
+    font-size: 0.6rem !important; /* Muy pequeño pero legible */
+    line-height: 1.1;
+    margin: 0;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block !important;
+    width: 100%;
+  }
+
+  /* Botón de cerrar ajustado */
+  .close-button,
+  .close-chat-btn {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    font-size: 14px;
+    top: 10px;
+    right: 10px;
+  }
+
+  .close-icon {
+    width: 9px;
+    height: 9px;
+  }
+
+  /* Formulario de datos */
+  .data-form-container {
+    max-height: 300px;
+    padding: 15px;
+    margin-bottom: 8px;
+  }
+
+  .data-form h4 {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+  }
+
+  .person-section {
+    margin-bottom: 20px;
+    padding: 12px;
+  }
+
+  .person-section h5 {
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+  }
+
+  .full-width {
+    margin-bottom: 12px;
+  }
+
+  .data-form ::ng-deep .mat-mdc-form-field .mat-mdc-form-field-infix {
+    padding: 12px;
+  }
+
+  .form-actions {
+    gap: 12px;
+    margin-top: 15px;
+  }
+
+  .form-actions button {
+    min-width: 100px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+
+  /* Área de chat */
+  .chat-messages {
+    padding: 10px;
+    gap: 10px;
+    margin-bottom: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Mensajes */
+  .message {
+    margin: 0 4px;
+    gap: 6px;
+    width: calc(100% - 8px);
+    box-sizing: border-box;
+  }
+
+  .user-message {
+    margin-left: auto;
+    margin-right: 0;
+    max-width: 85%;
+  }
+
+  .expert-message {
+    margin-right: auto;
+    margin-left: 0;
+    max-width: 85%;
+  }
+
+  .message-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+
+  .interpreter-avatar-small,
+  .user-avatar-image {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Ajustar posiciones de avatares */
+  .user-message .message-avatar {
+    top: -3px;
+    right: -4px;
+  }
+
+  .expert-message .message-avatar {
+    top: -3px;
+    left: -3px;
+  }
+
+  .avatar-icon {
+    font-size: 13px;
+  }
+
+  /* Ajustar padding de contenido */
+  .user-message .message-content {
+    padding-right: 20px;
+    align-items: flex-end;
+  }
+
+  .expert-message .message-content {
+    padding-left: 32px;
+    align-items: flex-start;
+  }
+
+  .message-text {
+    padding: 10px 16px;
+    border-radius: 14px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    min-width: 80px;
+  }
+
+  .user-message .message-text {
+    padding-top: 16px;
+    padding-right: 20px;
+    margin-left: auto;
+    right: 8px;
+  }
+
+  .expert-message .message-text {
+    padding-top: 16px;
+    padding-left: 20px;
+    padding-bottom: 24px;
+    margin-right: auto;
+  }
+
+  .user-message .message-text p {
+    font-size: 13px !important;
+    line-height: 1.3 !important;
+    word-break: break-word;
+  }
+
+  .expert-message .message-text p {
+    font-size: 14px !important;
+    line-height: 1.3 !important;
+    word-break: break-word;
+  }
+
+  .message-time {
+    font-size: 0.6rem;
+    margin-top: 3px;
+  }
+
+  /* Contenido bloqueado */
+  .blocked-content {
+    position: relative;
+  }
+
+  .blocked-overlay {
+    left: 30px;
+  }
+
+  .blocked-message {
+    padding: 12px;
+    max-width: 180px;
+  }
+
+  .blocked-message mat-icon {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .blocked-message p {
+    font-size: 11px;
+  }
+
+  .blocked-message small {
+    font-size: 10px;
+  }
+
+  /* Indicador de carga */
+  .loading-message {
+    gap: 6px;
+    margin: 0 4px;
+  }
+
+  .loading-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+    top: -3px;
+    left: -3px;
+  }
+
+  .loading-content {
+    padding-left: 32px;
+  }
+
+  .loading-dots {
+    padding: 10px 16px 12px 20px;
+    min-height: 45px;
+  }
+
+  .dots-container {
+    gap: 2px;
+  }
+
+  .loading-dots .dots-container span {
+    width: 4px;
+    height: 4px;
+  }
+
+  .loading-text {
+    font-size: 0.7rem;
+    line-height: 1.2;
+  }
+
+  /* Typing indicator */
+  .typing-message {
+    gap: 6px;
+    margin: 0 4px;
+  }
+
+  .typing-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+    top: -3px;
+    left: -3px;
+  }
+
+  .typing-content {
+    padding-left: 32px;
+  }
+
+  .typing-dots {
+    padding: 10px 16px;
+    padding-top: 16px;
+    padding-left: 20px;
+    gap: 2px;
+  }
+
+  .typing-dots span {
+    width: 4px;
+    height: 4px;
+  }
+
+  /* Área de entrada */
+  .chat-input-area {
+    padding: 10px 12px;
+    gap: 8px;
+    min-height: 65px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .message-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .message-input textarea {
+    min-height: 42px;
+    max-height: 100px;
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+
+  .character-count {
+    bottom: 4px;
+    right: 12px;
+    font-size: 10px;
+    padding: 1px 5px;
+  }
+
+  .input-buttons {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .reset-button,
+  .send-button {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  /* Modal de pago */
+  .payment-modal {
+    width: calc(100vw - 20px);
+    max-width: 95%;
+    margin: 10px;
+    border-radius: 18px;
+  }
+
+  .payment-header,
+  .payment-content {
+    padding: 12px 15px;
+  }
+
+  .payment-header h3 {
+    font-size: 1em;
+  }
+
+  .close-payment-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+  }
+
+  .love-package {
+    margin-bottom: 20px;
+  }
+
+  .package-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+  }
+
+  .love-package h4 {
+    font-size: 1.2rem;
+    margin: 12px 0 8px 0;
+  }
+
+  .package-description {
+    font-size: 14px;
+    margin: 12px 0;
+  }
+
+  .features-list {
+    margin: 15px 0;
+  }
+
+  .feature {
+    gap: 8px;
+    margin: 8px 0;
+    font-size: 13px;
+  }
+
+  .pricing {
+    padding: 20px;
+    margin: 20px 0;
+  }
+
+  .amount {
+    font-size: 2.5rem;
+  }
+
+  .currency {
+    font-size: 1.3rem;
+  }
+
+  .period {
+    font-size: 0.9rem;
+  }
+
+  .price-note {
+    font-size: 13px;
+  }
+
+  .stripe-payment-element {
+    padding: 15px;
+  }
+
+  .payment-actions button {
+    min-width: 140px;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+
+  .security-badges {
+    gap: 15px;
+  }
+
+  .security-badge {
+    font-size: 11px;
+    gap: 6px;
+  }
+
+  .security-text {
+    font-size: 10px;
+  }
+}

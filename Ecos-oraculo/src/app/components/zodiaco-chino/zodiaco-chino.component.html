@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- Fundo com estrelas animadas -->
+    <video autoplay muted loop playsinline class="background-video">
+      <source src="/HOROSCOPO.mp4" type="video/mp4" />
+      Seu navegador não suporta vídeos HTML5.
+    </video>
+
+    <!-- Overlay opcional para melhorar legibilidade -->
+    <div class="video-overlay"></div>
+
+    <!-- Conteúdo principal -->
+    <div class="main-content">
+      <div class="zodiac-modal">
+        <!-- Header -->
+        <div class="zodiac-header">
+          <div class="master-info-header">
+            <div class="interpreter-avatar">
+              <img
+                class="mystical-orb-image"
+                src="/Maestra-8.webp"
+                alt="Avatar da Mestra"
+              />
+            </div>
+            <div class="master-details-header">
+              <!-- Primeira linha: nome + ícone + título juntos -->
+              <div class="name-title-row">
+                <h3>Astróloga Maria</h3>
+                <span class="separator-icon">»</span>
+                <p class="interpreter-title">Guia Celestial dos Signos</p>
+              </div>
+              <!-- Segunda linha: especialidade abaixo EM MAIÚSCULAS -->
+              <p class="interpreter-specialty">
+                Astrologia ocidental e horóscopo personalizado
+              </p>
+            </div>
+          </div>
+          <button
+            class="close-chat-btn"
+            onclick="window.location.href='/'"
+            aria-label="Fechar"
+          >
+            <svg class="close-icon" width="12" height="12" viewBox="0 0 12 12">
+              <path
+                d="M1 1L11 11M1 11L11 1"
+                stroke="gray"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="chat-messages" #messagesContainer>
+          <div
+            *ngFor="let message of conversationHistory; trackBy: trackByMessage"
+            class="message-wrapper"
+            [ngClass]="{
+              'user-message': message.role === 'user',
+              'master-message': message.role === 'master'
+            }"
+          >
+            <div
+              class="message"
+              [ngClass]="{
+                'user-message': message.role === 'user',
+                'master-message': message.role === 'master'
+              }"
+            >
+              <div class="message-avatar" *ngIf="message.role === 'master'">
+                <img
+                  *ngIf="message.role === 'master'"
+                  class="interpreter-avatar-small"
+                  src="/Maestra-8.webp"
+                  alt="Avatar da Mestra"
+                />
+              </div>
+
+              <div class="message-content">
+                <!-- Eliminar o message-header daqui -->
+
+                <div
+                  class="message-text"
+                  [innerHTML]="formatMessage(message.message)"
+                ></div>
+
+                <!-- Mover a hora dentro do message-content, depois do message-text -->
+                <span class="message-time" *ngIf="message.role === 'master'">
+                  {{ formatTime(message.timestamp) }}
+                </span>
+              </div>
+
+              <div class="message-avatar" *ngIf="message.role === 'user'">
+                <img
+                  *ngIf="message.role === 'user'"
+                  class="user-avatar-image"
+                  src="/Visitante.webp"
+                  alt="Avatar do Usuário"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- 👈 INDICADOR DE CARGA ADICIONADO AQUI -->
+          <div *ngIf="isLoading" class="message-container typing-indicator">
+            <div class="interpreter-message-wrapper">
+              <div class="message-avatar">
+                <img
+                  class="interpreter-avatar-small"
+                  src="/Maestra-8.webp"
+                  alt="Avatar da Mestra"
+                />
+              </div>
+              <div class="message-content">
+                <div class="message-bubble interpreter-message typing">
+                  <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <p class="typing-text">
+                    Astróloga Emma está consultando os astros para você...
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="chat-input-area">
+          <div class="message-input">
+            <mat-form-field appearance="outline">
+              <textarea
+                matInput
+                [(ngModel)]="currentMessage"
+                (keydown)="onKeyPress($event)"
+                (input)="autoResize($event)"
+                placeholder="Pergunte sobre seu signo zodiacal e horóscopo..."
+                [disabled]="isLoading"
+                rows="1"
+                style="
+                  min-height: 24px;
+                  max-height: 120px;
+                  resize: none;
+                  overflow-y: auto;
+                "
+              ></textarea>
+            </mat-form-field>
+          </div>
+
+          <div class="input-buttons">
+            <button
+              class="reset-button"
+              (click)="resetChat()"
+              [disabled]="isLoading || conversationHistory.length === 0"
+              title="Reiniciar conversa"
+            >
+              <i class="fas fa-redo"></i>
+            </button>
+
+            <button
+              class="send-button"
+              id="send-button"
+              (click)="sendMessage()"
+              [disabled]="!currentMessage.trim() || isLoading"
+            >
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <app-recolecta-datos
+      *ngIf="showDataModal"
+      (onDataSubmitted)="onUserDataSubmitted($event)"
+      (onModalClosed)="onDataModalClosed()"
+    >
+    </app-recolecta-datos>
+    <!-- ===== MODAL DE PAGAMENTO HORÓSCOPO ===== -->
+    <div
+      *ngIf="showPaymentModal"
+      class="payment-modal-overlay"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="payment-modal" (click)="$event.stopPropagation()">
+        <div class="payment-header">
+          <h3>🔮 Desbloquear Sabedoria Astrológica</h3>
+          <button
+            class="close-payment-button"
+            (click)="cancelHoroscopePayment()"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="payment-content">
+          <div class="payment-price">
+            <div class="price-container">
+              <span class="currency">$</span>
+              <span class="price-amount">4</span>
+              <span class="price-decimal">.00</span>
+            </div>
+            <p class="price-description">Acesso completo e ilimitado</p>
+            <div class="price-features">
+              <span class="feature-tag">Sem assinaturas</span>
+              <span class="feature-tag">Pagamento único</span>
+              <span class="feature-tag">Acesso imediato</span>
+            </div>
+          </div>
+
+          <div
+            *ngIf="isProcessingPayment"
+            class="payment-loading"
+          >
+            <div class="loading-spinner"></div>
+            <p>Preparando o pagamento seguro...</p>
+          </div>
+
+          <div *ngIf="paymentError" class="payment-error">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ paymentError }}</span>
+          </div>
+
+          <div
+            *ngIf="!isProcessingPayment "
+            id="payment-element-container-horoscope"
+            class="payment-element-container"
+          ></div>
+
+          <div class="payment-actions">
+            <button
+              *ngIf="!isProcessingPayment"
+              class="pay-button"
+              (click)="handleHoroscopePaymentSubmit()"
+              [disabled]="isProcessingPayment"
+            >
+              <mat-icon *ngIf="!isProcessingPayment">lock_open</mat-icon>
+              <mat-spinner
+                *ngIf="isProcessingPayment"
+                diameter="20"
+                color="accent"
+              ></mat-spinner>
+              {{
+                isProcessingPayment ? "Processando pagamento..." : "Pagar 4.00€"
+              }}
+            </button>
+
+            <button
+              class="cancel-button"
+              (click)="cancelHoroscopePayment()"
+              [disabled]="isProcessingPayment"
+            >
+              <mat-icon>close</mat-icon>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <app-fortune-wheel
+      [isVisible]="showFortuneWheel"
+      [prizes]="horoscopePrizes"
+      (onPrizeWon)="onPrizeWon($event)"
+      (onWheelClosed)="onWheelClosed()"
+    >
+    </app-fortune-wheel>
+
+    <!-- Backdrop para fechar modal ao clicar fora -->
+    <div
+      *ngIf="showPaymentModal"
+      class="modal-backdrop"
+      (click)="cancelHoroscopePayment()"
+    ></div>
+  </body>
+</html>

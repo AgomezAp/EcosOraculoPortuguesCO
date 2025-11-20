@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const rate_limiting_1 = require("../middleware/rate-limiting");
+const validacion_1 = require("../middleware/validacion");
+const interpretador_sueno_1 = require("../controllers/interpretador-sueno");
+const router = (0, express_1.Router)();
+const chatController = new interpretador_sueno_1.ChatController();
+router.post('/interpretador-sueno', rate_limiting_1.rateLimiterMiddleware, validacion_1.validateDreamChatMiddleware, chatController.chatWithDreamInterpreter);
+router.get('/interpretador-sueno/info', rate_limiting_1.rateLimiterMiddleware, chatController.getDreamInterpreterInfo);
+exports.default = router;

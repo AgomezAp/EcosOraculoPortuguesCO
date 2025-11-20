@@ -1,0 +1,1859 @@
+:root {
+  --font-astrologer: "Berkshire Swash", cursive;
+  --font-user: "El Messiri", sans-serif;
+  --font-system: "Arsenal", sans-serif;
+}
+
+/* ===== VARIABLES GLOBALES ===== */
+:host {
+  --primary-purple: #8b5cf6;
+  --secondary-purple: #7c3aed;
+  --light-purple: rgba(139, 92, 246, 0.1);
+  --border-purple: rgba(139, 92, 246, 0.3);
+  --text-light: rgba(255, 255, 255, 0.9);
+  --text-muted: rgba(255, 255, 255, 0.7);
+  --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --shadow-soft: 0 4px 15px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 6px 25px rgba(139, 92, 246, 0.2);
+  --transition: all 0.3s ease;
+}
+
+/* ✅ SOLUCIÓN GLOBAL PARA ELIMINAR SCROLL HORIZONTAL */
+html,
+body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+* {
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+}
+:host {
+  display: block;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+.close-chat-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 30px;
+  height: 30px;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  padding: 0;
+}
+
+.close-chat-btn:hover {
+  background: #ffffff80;
+}
+
+.close-icon {
+  width: 12px;
+  height: 12px;
+}
+
+/* ===== VIDEO DE FONDO ===== */
+.background-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+  pointer-events: none;
+}
+/* Overlay opcional para mejorar legibilidad */
+.video-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Contenedor de fondo con imagen - actualizado para funcionar con video */
+.background-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -3;
+}
+
+/* Contenedor principal con z-index actualizado */
+.main-content {
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 20px;
+  overflow-x: hidden;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+.birth-chart-modal {
+  font-family: "Cinzel", serif;
+  background-color: #00000026;
+  border-radius: 25px;
+  max-width: min(1200px, calc(100vw - 40px));
+  width: 75%;
+  height: calc(100vh - 40px);
+  margin: 0 auto;
+  position: relative;
+  color: white;
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 15px;
+  z-index: 2;
+  box-sizing: border-box;
+}
+/* Header con z-index alto y mejor contraste */
+.birth-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #17214c, #594c85);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  position: relative;
+  flex-shrink: 0;
+  margin-bottom: 12px;
+  z-index: 2;
+  min-height: 65px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.astrologer-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.astrologer-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: var(--shadow-soft);
+  flex-shrink: 0;
+}
+
+.astrologer-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 1));
+  }
+}
+
+.astrologer-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.astrologer-details h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 100;
+  font-family: "Berkshire Swash", cursive;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.separator-icon {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 1.2;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.name-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.close-button {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  transition: var(--transition);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+/* ✅ SECCIONES CON ANCHO CONTROLADO */
+.personal-data-section {
+  background: rgba(139, 92, 246, 0.1);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  padding: 12px 20px;
+  flex-shrink: 0;
+  z-index: 3;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.personal-data-section h4 {
+  margin: 0 0 10px 0;
+  color: var(--primary-purple);
+  font-size: 1em;
+  font-weight: 600;
+  text-align: center;
+  font-family: var(--font-astrologer);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.data-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.half-width {
+  flex: 1;
+  min-width: 0;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.form-actions button {
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-family: var(--font-user);
+  font-weight: 600;
+  transition: var(--transition);
+  font-size: 0.85rem;
+}
+
+.form-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-medium);
+}
+
+/* Preview de carta con z-index alto */
+.chart-preview {
+  background: rgba(139, 92, 246, 0.05);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+  padding: 12px 20px;
+  flex-shrink: 0;
+  z-index: 3;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chart-preview h4 {
+  margin: 0 0 10px 0;
+  color: var(--primary-purple);
+  font-size: 1em;
+  font-weight: 600;
+  text-align: center;
+  font-family: var(--font-astrologer);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  max-width: 350px;
+  margin: 0 auto;
+  width: 100%;
+}
+.chart-card {
+  background: white;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border-purple);
+  transition: var(--transition);
+  min-width: 0;
+}
+.chart-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-medium);
+}
+
+.chart-card .sign {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--primary-purple);
+  margin-bottom: 4px;
+}
+.chart-card .label {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Área de chat con z-index alto */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 15px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 0 0 12px 0;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 3;
+  width: 100%;
+  box-sizing: border-box;
+}
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #17214c;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #594c85;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #594c85;
+}
+
+/* Mensajes con estructura exacta de sueños */
+.message {
+  display: flex;
+  gap: 10px;
+  animation: fadeInUp 0.4s ease-out;
+  position: relative;
+  margin: 0 8px;
+  max-width: calc(100% - 16px);
+  box-sizing: border-box;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message.user-message {
+  justify-content: flex-end;
+  margin-left: 20%;
+  margin-right: 8px;
+  max-width: calc(80% - 8px);
+}
+
+.message.astrologer-message {
+  flex-direction: row;
+  justify-content: flex-start;
+  margin-left: 8px;
+  margin-right: 20%;
+  max-width: calc(80% - 8px);
+}
+
+.message-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+
+.message.astrologer-message .message-avatar {
+  background: #594c85;
+}
+
+.message.user-message .message-avatar {
+  background-color: #17214c;
+  border: 1px solid #594c85;
+}
+
+
+.avatar-icon {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+}
+
+
+.message-content {
+  max-width: calc(100% - 45px);
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sender-name {
+  font-weight: 600;
+  color: var(--primary-purple);
+  font-size: 0.8rem;
+  font-family: var(--font-system);
+}
+
+.message-time {
+  font-size: 0.65rem;
+  display: block;
+  text-align: right !important;
+  margin-top: 6px;
+  font-family: "Arsenal", sans-serif !important;
+  opacity: 0.7;
+  font-weight: 300;
+}
+
+.message.astrologer-message .message-time {
+  color: rgb(255, 255, 255);
+}
+
+.message.user-message .message-time {
+  color: rgb(0, 0, 0);
+}
+
+.message-text {
+  padding: 12px 16px 8px 16px;
+  border-radius: 18px;
+  color: white;
+  font-family: "Arsenal", sans-serif !important;
+  font-weight: regular !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0.3px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.message.astrologer-message .message-text {
+  background: linear-gradient(135deg, #594c85, #17214c);
+  border: 1px solid #594c85;
+  color: white;
+}
+.message.astrologer-message .message-text p {
+  color: #334155 !important;
+  font-family: var(--font-astrologer) !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  margin: 0;
+  text-shadow: none;
+  word-break: break-word;
+}
+
+.message.user-message .message-text {
+  border-bottom-right-radius: 6px;
+  background: white;
+  color: rgb(0, 0, 0);
+  border: 1px solid var(--border-purple);
+}
+
+
+.message.user-message .message-text p {
+  color: white !important;
+  font-family: var(--font-user) !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  margin: 0;
+  word-break: break-word;
+}
+
+/* Mensajes bloqueados - estructura exacta de sueños */
+.blocked-message {
+  position: relative;
+}
+
+.blurred-content .message-text {
+  filter: blur(4px);
+  user-select: none;
+  pointer-events: none;
+}
+
+.message-payment-overlay {
+  position: absolute;
+  top: 0;
+  left: 45px;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 18px;
+  backdrop-filter: blur(2px);
+  z-index: 10;
+}
+
+.payment-prompt {
+  background: white;
+  padding: 15px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--primary-purple);
+  max-width: 200px;
+  animation: bounce 0.5s ease-out;
+}
+
+.lock-icon {
+  font-size: 20px;
+  display: block;
+  margin-bottom: 8px;
+  color: var(--primary-purple);
+}
+
+.payment-prompt p {
+  margin: 4px 0;
+  color: #334155;
+  font-size: 12px;
+  font-family: var(--font-user);
+  line-height: 1.3;
+}
+
+.payment-prompt p:first-of-type {
+  font-weight: 600;
+  color: var(--primary-purple);
+  font-size: 13px;
+}
+
+.unlock-button {
+  background: linear-gradient(
+    135deg,
+    var(--primary-purple),
+    var(--secondary-purple)
+  );
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: var(--font-user);
+  margin-top: 8px;
+  font-size: 12px;
+  width: 100%;
+}
+
+.unlock-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-medium);
+}
+
+/* Indicador de carga - estructura exacta de sueños */
+.loading-message {
+  max-width: 100%;
+  display: flex;
+  gap: 10px;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.loading-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--primary-purple),
+    var(--secondary-purple)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: var(--shadow-soft);
+}
+
+.loading-content {
+  flex: 1;
+  background: linear-gradient(135deg, #594c85, #17214c);
+
+  padding: 12px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.loading-dots {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 4px;
+}
+
+.loading-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--primary-purple);
+  animation: pulse 1.4s infinite ease-in-out;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.loading-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.loading-text {
+  color: #64748b;
+  font-size: 0.75rem;
+  font-style: italic;
+  font-family: var(--font-astrologer);
+  margin: 0;
+}
+
+@keyframes pulse {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Área de entrada con z-index alto */
+.chat-input-area {
+  border-radius: 20px;
+  padding: 15px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+  z-index: 3; /* Asegurar que esté sobre el video */
+  position: relative;
+}
+
+.input-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.text-input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.message-input {
+  width: 100%;
+  min-height: 18px;
+  max-height: 80px;
+  padding: 10px 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #334155;
+  font-family: "Arsenal", sans-serif;
+  font-weight: 300;
+  line-height: 1.3;
+  font-size: 14px !important;
+  resize: none;
+  outline: none;
+
+  /* Mantener scroll pero ocultar barra */
+  overflow-y: auto;
+  scrollbar-width: none; /* Para Firefox */
+  -ms-overflow-style: none; /* Para Internet Explorer/Edge */
+}
+
+/* Ocultar scrollbar en navegadores webkit manteniendo funcionalidad */
+.message-input::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.message-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.send-button {
+  width: 40px;
+  height: 40px;
+  background-color: rgba(120, 120, 130, 0.4);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  backdrop-filter: blur(5px);
+}
+.clear-button {
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #666;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clear-button:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.send-button:hover {
+  background-color: rgba(120, 120, 130, 0.5);
+}
+
+.clear-button:active {
+  transform: scale(0.95);
+}
+
+.send-button:active {
+  transform: scale(0.95);
+}
+
+.send-button:disabled {
+  background-color: rgba(120, 120, 130, 0.2);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+}
+
+.input-hint {
+  margin: 8px 0 0 0;
+  text-align: center;
+  color: rgba(139, 92, 246, 0.7);
+  font-size: 0.75rem;
+  font-family: var(--font-system);
+  font-style: italic;
+  font-weight: 300;
+}
+
+/* Modal de pago con z-index máximo */
+.payment-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000; /* Aumentar z-index para estar sobre el video */
+  animation: fadeIn 0.3s ease-out;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(10px);
+  }
+}
+
+.payment-modal {
+  background: linear-gradient(
+    135deg,
+    rgba(28, 28, 60, 0.98) 0%,
+    rgba(44, 44, 80, 0.98) 50%,
+    rgba(76, 50, 130, 0.98) 100%
+  );
+  border-radius: 25px;
+  padding: 0;
+  /* Use a width that fits content but caps on large screens */
+  width: min(720px, 90vw);
+  box-sizing: border-box;
+  /* allow height to fit content but cap it to viewport when needed */
+  height: auto !important;
+  max-height: calc(100vh - 80px) !important; /* cap so modal never fills entire viewport */
+  color: white;
+  position: relative;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(139, 92, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  border: 2px solid var(--border-purple);
+  overflow-y: auto; /* only vertical scroll when needed */
+  overflow-x: hidden; /* prevent horizontal scroll/empty space */
+  margin: auto;
+  z-index: 10001;
+}
+
+
+
+.payment-header {
+  background: linear-gradient(
+    135deg,
+    var(--primary-purple),
+    var(--secondary-purple)
+  );
+  padding: 20px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.payment-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+}
+
+
+.payment-header h3 {
+  color: white;
+  margin: 0;
+  font-size: 1.2em;
+  font-weight: 600;
+  font-family: var(--font-user);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.close-payment-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: var(--transition);
+  backdrop-filter: blur(10px);
+}
+
+.close-payment-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+.payment-content {
+  padding: 20px;
+  text-align: center;
+  position: relative;
+  max-width: 100% !important;
+  width: 100%;
+  box-sizing: border-box;
+  /* center inner content and avoid left-only layout */
+  display: block;
+}
+
+.payment-content::before {
+  content: "✨";
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  font-size: 20px;
+  opacity: 0.3;
+  animation: float 3s ease-in-out infinite;
+}
+
+.payment-content::after {
+  content: "🔮";
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 18px;
+  opacity: 0.4;
+  animation: float 3s ease-in-out infinite 1.5s;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.payment-info {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.payment-info p {
+  margin: 6px 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  line-height: 1.4;
+  font-family: var(--font-user);
+}
+
+.payment-info p:first-child {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.payment-price {
+  text-align: center;
+  margin: 20px 0;
+  padding: 18px;
+  background: linear-gradient(
+    135deg,
+    var(--light-purple) 0%,
+    rgba(139, 92, 246, 0.05) 100%
+  );
+  border-radius: 20px;
+  border: 2px solid var(--border-purple);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.payment-price::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, var(--light-purple) 0%, transparent 70%);
+  animation: pulse-glow-price 4s ease-in-out infinite;
+}
+
+@keyframes pulse-glow-price {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+.price-amount {
+  display: block;
+  font-size: 2.2em;
+  font-weight: bold;
+  color: var(--primary-purple);
+  font-family: var(--font-user);
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 20px rgba(139, 92, 246, 0.5);
+}
+
+.price-description {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9em;
+  font-weight: 500;
+  font-family: var(--font-user);
+  position: relative;
+  z-index: 1;
+}
+
+.payment-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  margin: 15px 0;
+}
+
+.loading-spinner {
+  width: 35px;
+  height: 35px;
+  border: 3px solid rgba(139, 92, 246, 0.3);
+  border-top: 3px solid var(--primary-purple);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.payment-loading p {
+  color: rgba(255, 255, 255, 0.8);
+  font-family: var(--font-user);
+  margin: 0;
+  font-size: 13px;
+}
+
+.payment-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 12px;
+  border-radius: 10px;
+  margin: 15px 0;
+  font-size: 13px;
+  font-family: var(--font-user);
+  text-align: center;
+}
+
+.payment-element-container {
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+  width: calc(100% - 30px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.payment-element-container:focus-within {
+  border-color: var(--border-purple);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+}
+
+.payment-actions {
+  text-align: center;
+}
+
+.pay-button {
+  background: linear-gradient(
+    135deg,
+    var(--primary-purple) 0%,
+    var(--secondary-purple) 50%,
+    var(--primary-purple) 100%
+  );
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: var(--font-user);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.pay-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.pay-button:hover::before {
+  left: 100%;
+}
+
+.pay-button:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 35px rgba(139, 92, 246, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.pay-button:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.pay-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.pay-button:disabled::before {
+  display: none;
+}
+
+/* ✅ Estilos personalizados para scrollbar del modal de pago */
+.payment-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.payment-modal::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.payment-modal::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--primary-purple), var(--secondary-purple));
+  border-radius: 10px;
+  transition: var(--transition);
+}
+
+.payment-modal::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--secondary-purple), var(--primary-purple));
+}
+
+.payment-modal::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at center,
+    var(--light-purple) 0%,
+    transparent 50%
+  );
+  animation: rotate-bg 20s linear infinite;
+  z-index: -1;
+}
+
+@keyframes rotate-bg {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animaciones adicionales */
+/* Focus visible con colores púrpuras */
+.send-button:focus-visible,
+.data-button:focus-visible,
+.clear-button:focus-visible,
+.close-button:focus-visible,
+.unlock-button:focus-visible,
+.pay-button:focus-visible {
+  outline: 2px solid var(--primary-purple);
+  outline-offset: 2px;
+}
+
+
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.interpreter-avatar {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.interpreter-avatar-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mystical-orb-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #17214c;
+}
+.interpreter-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.name-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.interpreter-details h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 100;
+  font-family: "Berkshire Swash", cursive;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.separator-icon {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 1.2;
+  margin: 0 2px;
+}
+
+.interpreter-title {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-family: "Arsenal", sans-serif;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.interpreter-specialty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: "Arsenal", sans-serif;
+  font-style: italic;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.user-avatar-image {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.user-avatar-image {
+  border: 2px solid #3b83f600;
+}
+/* ===== RESPONSIVE MEJORADO SIN SCROLL HORIZONTAL ===== */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 8px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .birth-chart-modal {
+    height: calc(100vh - 16px) !important;
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    border-radius: 15px;
+    padding: 8px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .birth-chart-header {
+    padding: 6px 8px !important;
+    margin-bottom: 6px;
+    min-height: 50px;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .astrologer-info {
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .astrologer-avatar,
+  .mystical-orb-image {
+    width: 32px !important;
+    height: 32px !important;
+    flex-shrink: 0;
+  }
+
+  .astrologer-icon {
+    font-size: 14px;
+  }
+
+  .astrologer-details {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .name-title-row {
+    gap: 3px;
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+
+  .astrologer-details h3 {
+    font-size: 0.8rem !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .separator-icon {
+    font-size: 0.6rem !important;
+    margin: 0 1px;
+    flex-shrink: 0;
+  }
+
+  .interpreter-title {
+    font-size: 0.55rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1;
+    letter-spacing: 0.1px;
+  }
+
+  .interpreter-specialty {
+    font-size: 0.5rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+
+  .close-button {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .personal-data-section {
+    padding: 6px 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .chart-preview {
+    padding: 6px 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .chart-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 4px;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .chat-messages {
+    padding: 6px !important;
+    gap: 6px;
+    margin-bottom: 6px;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .message {
+    margin: 0 2px !important;
+    gap: 4px;
+    max-width: calc(100% - 4px) !important;
+    box-sizing: border-box !important;
+  }
+
+  .message.user-message {
+    margin-left: 15% !important;
+    margin-right: 2px !important;
+    max-width: calc(85% - 2px) !important;
+  }
+
+  .message.astrologer-message {
+    margin-left: 2px !important;
+    margin-right: 15% !important;
+    max-width: calc(85% - 2px) !important;
+  }
+
+  .message-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .interpreter-avatar-small,
+  .user-avatar-image {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .message-content {
+    max-width: calc(100% - 32px) !important;
+    min-width: 0;
+  }
+
+  .message-text {
+    padding: 6px 8px 4px 8px !important;
+    border-radius: 10px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100% !important;
+  }
+
+  .message.astrologer-message .message-text p {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    word-break: break-word;
+  }
+
+  .message.user-message .message-text p {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    word-break: break-word;
+  }
+
+  .chat-input-area {
+    padding: 6px 8px !important;
+    border-radius: 12px;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .input-container {
+    gap: 4px;
+    width: 100% !important;
+  }
+
+  .text-input-wrapper {
+    flex: 1;
+    min-width: 0 !important;
+  }
+
+  .message-input {
+    padding: 6px 8px !important;
+    border-radius: 14px;
+    font-size: 11px !important;
+    min-height: 12px;
+    max-height: 50px;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .send-button,
+  .clear-button {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .action-buttons {
+    gap: 3px;
+    flex-shrink: 0;
+  }
+
+  .payment-modal {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: 85vh !important; /* ✅ Agregar altura máxima en móvil */
+    margin: 8px !important;
+    border-radius: 14px;
+    overflow-y: auto !important; /* ✅ Asegurar scroll en móvil */
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 8px;
+  }
+
+  .birth-chart-modal {
+    height: calc(100vh - 16px);
+    padding: 8px;
+    border-radius: 12px;
+  }
+
+  .birth-chart-header {
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    min-height: 50px;
+  }
+
+  .astrologer-info {
+    gap: 6px;
+  }
+
+  .astrologer-avatar,
+  .mystical-orb-image {
+    width: 32px;
+    height: 32px;
+  }
+
+  .astrologer-icon {
+    font-size: 14px;
+  }
+
+  .astrologer-details h3 {
+    font-size: 0.8rem;
+  }
+
+  .separator-icon {
+    font-size: 0.6rem;
+    margin: 0 1px;
+  }
+
+  .interpreter-title {
+    font-size: 0.55rem;
+  }
+
+  .interpreter-specialty {
+    font-size: 0.5rem;
+  }
+
+  .close-button {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .personal-data-section {
+    padding: 6px 10px;
+  }
+
+  .personal-data-section h4 {
+    font-size: 0.8em;
+    margin-bottom: 4px;
+  }
+
+  .form-row {
+    gap: 4px;
+  }
+
+  .half-width {
+    min-width: calc(50% - 2px);
+  }
+
+  .form-actions button {
+    padding: 5px 10px;
+    font-size: 0.7rem;
+  }
+
+  .chart-preview {
+    padding: 6px 10px;
+  }
+
+  .chart-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+  }
+
+  .chart-card {
+    padding: 4px;
+  }
+
+  .chart-card .sign {
+    font-size: 0.8rem;
+    margin-bottom: 1px;
+  }
+
+  .chart-card .label {
+    font-size: 0.6rem;
+  }
+
+  .chat-messages {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .message {
+    margin: 0 2px;
+    gap: 4px;
+    max-width: calc(100% - 4px);
+  }
+
+  .message.user-message,
+  .message.astrologer-message {
+    max-width: 85%;
+  }
+
+  .message-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .interpreter-avatar-small,
+  .user-avatar-image {
+    width: 28px;
+    height: 28px;
+  }
+
+  .message-content {
+    max-width: calc(100% - 32px);
+  }
+
+  .message-text {
+    padding: 6px 10px 4px 10px;
+    border-radius: 10px;
+  }
+
+  .message.astrologer-message .message-text p {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  .message.user-message .message-text p {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+  }
+
+  .message-time {
+    font-size: 0.5rem;
+    margin-top: 2px;
+  }
+
+  .message-payment-overlay {
+    left: 30px;
+  }
+
+  .payment-prompt {
+    padding: 8px;
+    max-width: 140px;
+  }
+
+  .lock-icon {
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  .payment-prompt p {
+    font-size: 9px;
+  }
+
+  .payment-prompt p:first-of-type {
+    font-size: 10px;
+  }
+
+  .unlock-button {
+    padding: 4px 8px;
+    font-size: 9px;
+    margin-top: 2px;
+  }
+
+  .loading-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .loading-content {
+    padding: 6px 10px;
+  }
+
+  .loading-text {
+    font-size: 0.6rem;
+  }
+
+  .chat-input-area {
+    padding: 6px 10px;
+    border-radius: 12px;
+  }
+
+  .input-container {
+    gap: 4px;
+  }
+
+  .message-input {
+    padding: 6px 10px;
+    border-radius: 14px;
+    font-size: 11px !important;
+    min-height: 12px;
+    max-height: 50px;
+  }
+
+  .send-button,
+  .clear-button {
+    width: 30px;
+    height: 30px;
+    font-size: 11px;
+  }
+
+  .action-buttons {
+    gap: 3px;
+  }
+
+  .input-hint {
+    font-size: 0.6rem;
+    margin-top: 3px;
+  }
+
+  .payment-modal {
+    width: calc(100vw - 16px);
+    max-width: 98%;
+    margin: 8px;
+    border-radius: 14px;
+  }
+
+  .payment-header,
+  .payment-content {
+    padding: 10px;
+  }
+
+  .payment-header h3 {
+    font-size: 0.9em;
+  }
+
+  .close-payment-button {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+
+  .price-amount {
+    font-size: 1.4em;
+  }
+
+  .pay-button {
+    padding: 8px 16px;
+    font-size: 0.8em;
+  }
+}

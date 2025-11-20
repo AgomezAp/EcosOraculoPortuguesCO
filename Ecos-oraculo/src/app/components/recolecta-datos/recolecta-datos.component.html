@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Documento</title>
+  </head>
+  <body>
+    <!-- Fim do Google Tag Manager (noscript) -->
+    <div class="data-modal-overlay">
+      <div class="data-modal">
+        <div class="data-header">
+          <h3>📝 Complete seus dados para continuar</h3>
+          <button (click)="cancelDataModal()" class="close-data-button">
+            ✕
+          </button>
+        </div>
+
+        <div class="data-content">
+          <div class="data-info">
+            <p>Para prosseguir com o pagamento, precisamos de alguns dados:</p>
+          </div>
+
+          <form class="data-form" (ngSubmit)="submitUserData()">
+        
+
+            <!-- Dados de contato -->
+            <div class="form-section">
+              <h4>Dados de Contato</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="email">Email *:</label>
+                  <input
+                    type="email"
+                    id="email"
+                    [(ngModel)]="userData.email"
+                    name="email"
+                    placeholder="seu@email.com"
+                    required
+                    [class.error]="hasError('email')"
+                  />
+                  <span *ngIf="hasError('email')" class="error-message">{{
+                    dataFormErrors["email"]
+                  }}</span>
+                </div>
+
+              
+              </div>
+
+              <!-- ✅ Checkbox para fatura -->
+              <div class="form-group checkbox-group">
+                <span class="checkbox-text">
+                  📧 Você receberá uma fatura por email
+                </span>
+              </div>
+            </div>
+
+            <div
+              *ngIf="dataFormErrors['general']"
+              class="error-message general-error"
+            >
+              {{ dataFormErrors["general"] }}
+            </div>
+
+            <div *ngIf="isValidatingData" class="data-loading">
+              <div class="loading-spinner"></div>
+              <p>Validando dados...</p>
+            </div>
+            <div class="form-group" style="margin: 16px 0">
+              <label>
+                <input
+                  type="checkbox"
+                  [(ngModel)]="aceptaTerminos"
+                  name="aceptaTerminos"
+                  required
+                />
+                Aceito os
+                <a
+                  routerLink="/termos-condicoes-ecos"
+                  target="_blank"
+                  href="termos-condicoes-ecos"
+                  (click)="$event.stopPropagation()"
+                >
+                  Termos e Condições
+                </a>
+                *
+              </label>
+
+              <label>
+                <input
+                  type="checkbox"
+                  [(ngModel)]="datosVeridicos"
+                  name="datosVeridicos"
+                  required
+                />
+                Confirmo que os dados fornecidos são verídicos e completos
+              </label>
+
+              <!-- ✅ Mensagens de erro corrigidas -->
+              <span *ngIf="showDatosVeridicosError" class="error-message">
+                Você deve confirmar que os dados inseridos são verídicos
+              </span>
+              <span *ngIf="showTerminosError" class="error-message">
+                Você deve aceitar os Termos e Condições
+              </span>
+            </div>
+
+            <div class="data-actions">
+              <button
+                type="button"
+                (click)="cancelDataModal()"
+                class="cancel-button"
+                [disabled]="isValidatingData"
+              >
+                Cancelar
+              </button>
+              <!-- ✅ Botão corrigido - apenas type="submit", sem (click) -->
+              <button
+                type="submit"
+                [disabled]="
+                  isValidatingData || !aceptaTerminos || !datosVeridicos
+                "
+                class="continue-button"
+              >
+                <span *ngIf="!isValidatingData"
+                  >Continuar para o Pagamento</span
+                >
+                <span *ngIf="isValidatingData">Processando...</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

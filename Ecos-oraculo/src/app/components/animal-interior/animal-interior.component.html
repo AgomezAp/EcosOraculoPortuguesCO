@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animal Interior</title>
+  </head>
+  <body>
+    <video autoplay muted loop playsinline class="background-video">
+      <source src="/ANIMAL.mp4" type="video/mp4" />
+      Seu navegador não suporta vídeos HTML5.
+    </video>
+
+    <!-- Overlay opcional para melhorar legibilidade -->
+    <div class="video-overlay"></div>
+
+    <div class="oracle-container">
+      <div class="content-with-navbar">
+        <div class="oracle-main">
+          <!-- ===== INFORMAÇÃO DO GUIA ===== -->
+          <div class="interpreter-info">
+            <div class="interpreter-avatar">
+              <img
+                class="mystical-orb-image"
+                src="/Maestra-5.webp"
+                alt="Maestra Avatar"
+              />
+            </div>
+            <div class="interpreter-details">
+              <!-- Primeira linha: nome + ícone + título juntos -->
+              <div class="name-title-row">
+                <h3>Xamã Kiara</h3>
+                <span class="separator-icon">»</span>
+                <p class="interpreter-title">Guia de Animais Interiores</p>
+              </div>
+              <!-- Segunda linha: especialidade abaixo EM MAIÚSCULAS -->
+              <p class="interpreter-specialty">
+                Especialista em conexão espiritual com o reino animal
+              </p>
+            </div>
+            <button
+              class="close-chat-btn"
+              onclick="window.location.href='/'"
+              aria-label="Fechar"
+            >
+              <svg
+                class="close-icon"
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+              >
+                <path
+                  d="M1 1L11 11M1 11L11 1"
+                  stroke="gray"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <!-- ===== ÁREA DE CHAT ===== -->
+          <div class="chat-area">
+            <div
+              class="messages-container"
+              #chatContainer
+              (scroll)="onScroll($event)"
+              (mousedown)="onUserStartScroll()"
+              (wheel)="onUserStartScroll()"
+            >
+              <!-- Mensagens normais -->
+              <div
+                *ngFor="let message of chatMessages"
+                class="message"
+                [ngClass]="{
+                  'user-message': message.isUser,
+                  'blocked-message': isMessageBlocked(message)
+                }"
+              >
+                <div
+                  class="message-avatar"
+                  [ngClass]="{
+                    'user-avatar': message.isUser,
+                    'interpreter-avatar-small': !message.isUser
+                  }"
+                >
+                  <img
+                    *ngIf="message.isUser"
+                    class="user-avatar-image"
+                    src="/Visitante.webp"
+                    alt="Usuário Avatar"
+                  />
+                  <img
+                    *ngIf="!message.isUser"
+                    class="interpreter-avatar-small"
+                    src="/Maestra-5.webp"
+                    alt="Maestra Avatar"
+                  />
+                </div>
+
+                <div
+                  class="message-content"
+                  [ngClass]="{ 'blurred-content': isMessageBlocked(message) }"
+                >
+                  <div class="message-bubble">
+                    <p [innerHTML]="formatMessage(message.content)"></p>
+                    <span class="message-time">{{
+                      getTimeString(message.timestamp)
+                    }}</span>
+                  </div>
+                </div>
+
+                <!-- Overlay de pagamento para mensagens bloqueadas -->
+                <div
+                  *ngIf="isMessageBlocked(message)"
+                  class="message-payment-overlay"
+                >
+                  <div class="payment-prompt">
+                    <span class="lock-icon">🔒</span>
+                    <p>Conteúdo premium!</p>
+                    <p>
+                      Desbloqueie consultas ilimitadas com sua guia espiritual
+                    </p>
+                    <button class="unlock-button" (click)="promptForPayment()">
+                      Desbloquear por 4.00
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Indicador de carregamento -->
+              <div *ngIf="isLoading" class="message typing-indicator">
+                <div class="message-avatar interpreter-avatar-small">
+                  <img
+                    class="interpreter-avatar-small"
+                    src="/Maestra-5.webp"
+                    alt="Maestra Avatar"
+                  />
+                </div>
+                <div class="message-content">
+                  <div class="message-bubble typing">
+                    <div class="typing-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    <p class="typing-text">
+                      Xamã Kiara está analisando sua consulta...
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===== ÁREA DE ENTRADA ===== -->
+          </div>
+          <div class="input-area">
+            <div class="input-container">
+              <div class="text-input-wrapper">
+                <textarea
+                  class="message-input"
+                  [(ngModel)]="currentMessage"
+                  placeholder="Escreva sua consulta sobre seu animal interior..."
+                  (input)="autoResize($event)"
+                  (keydown)="onKeyPress($event)"
+                  [disabled]="isLoading"
+                  rows="1"
+                >
+                </textarea>
+              </div>
+
+              <div class="action-buttons">
+                <button
+                  class="clear-button"
+                  (click)="clearChat()"
+                  title="Limpar chat"
+                >
+                  <i class="fas fa-redo"></i>
+                </button>
+                <button
+                  class="send-button"
+                  id="send-button"
+                  (click)="sendMessage()"
+                  [disabled]="!currentMessage.trim() || isLoading"
+                  title="Enviar mensagem"
+                >
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <app-recolecta-datos
+        *ngIf="showDataModal"
+        (onDataSubmitted)="onUserDataSubmitted($event)"
+        (onModalClosed)="onDataModalClosed()"
+      >
+      </app-recolecta-datos>
+    </div>
+
+    <!-- ===== MODAL DE PAGAMENTO ===== -->
+    <div *ngIf="showPaymentModal" class="payment-modal-overlay">
+      <div class="payment-modal">
+        <div class="payment-header">
+          <h3>🦉 Desbloquear Sabedoria Animal</h3>
+          <button class="close-payment-button" (click)="cancelPayment()">
+            ✕
+          </button>
+        </div>
+
+        <div class="payment-content">
+          <div class="payment-info">
+            <p>Acesse consultas ilimitadas com Xamã Kiara</p>
+            <p>Descubra os segredos profundos do seu animal interior</p>
+          </div>
+
+          <div class="payment-price">
+            <span class="price-amount">4.00€</span>
+            <p class="price-description">Acesso completo e ilimitado</p>
+          </div>
+
+          <div
+            *ngIf="isProcessingPayment"
+            class="payment-loading"
+          >
+            <div class="loading-spinner"></div>
+            <p>Preparando o pagamento...</p>
+          </div>
+
+          <div *ngIf="paymentError" class="payment-error">
+            {{ paymentError }}
+          </div>
+
+          <div
+            *ngIf="!isProcessingPayment "
+            id="payment-element-container-animal"
+            class="payment-element-container"
+          ></div>
+
+          <div class="payment-actions">
+            <button
+              *ngIf="!isProcessingPayment "
+              class="pay-button"
+              (click)="handlePaymentSubmit()"
+              [disabled]="isProcessingPayment"
+            >
+              {{ isProcessingPayment ? "Processando..." : "Pagar 4.00€" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <app-fortune-wheel
+      [isVisible]="showFortuneWheel"
+      [prizes]="animalPrizes"
+      (onPrizeWon)="onPrizeWon($event)"
+      (onWheelClosed)="onWheelClosed()"
+    >
+    </app-fortune-wheel>
+  </body>
+</html>
+
+<!-- Vídeo de fundo -->

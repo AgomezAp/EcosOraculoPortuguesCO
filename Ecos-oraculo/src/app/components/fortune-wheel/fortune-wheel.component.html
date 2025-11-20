@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Documento</title>
+  </head>
+  <body>
+    <div class="crystal-ball-container" [class.active]="isVisible">
+      <div class="crystal-backdrop" (click)="onWheelClosedHandler()"></div>
+
+      <div class="crystal-modal">
+        <div class="crystal-header">
+          <h2>Consulte o Oráculo Cósmico</h2>
+          <button class="close-crystal-btn" (click)="onWheelClosedHandler()">
+            ✕
+          </button>
+        </div>
+
+        <div class="crystal-content">
+          <!-- Base ornamental -->
+          <div class="crystal-base">
+            <div class="base-details">
+              <div class="base-ring"></div>
+              <div class="base-runes">
+                <span class="rune">∴</span>
+                <span class="rune">⋄</span>
+                <span class="rune">∴</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bola de cristal -->
+          <div class="crystal-ball-wrapper">
+            <div
+              class="crystal-ball"
+              #crystalElement
+              [class.spinning]="wheelSpinning"
+              [class.revealing]="selectedPrize && !wheelSpinning"
+            >
+              <!-- Partículas místicas flotantes -->
+              <div class="mystic-particles">
+                <div
+                  class="particle"
+                  style="--delay: 0s; --x: 20%; --y: 30%"
+                ></div>
+                <div
+                  class="particle"
+                  style="--delay: 1s; --x: 80%; --y: 20%"
+                ></div>
+                <div
+                  class="particle"
+                  style="--delay: 2s; --x: 30%; --y: 70%"
+                ></div>
+                <div
+                  class="particle"
+                  style="--delay: 3s; --x: 70%; --y: 80%"
+                ></div>
+                <div
+                  class="particle"
+                  style="--delay: 4s; --x: 50%; --y: 40%"
+                ></div>
+                <div
+                  class="particle"
+                  style="--delay: 5s; --x: 60%; --y: 60%"
+                ></div>
+                <div
+                  class="particle"
+                  style="--delay: 6s; --x: 40%; --y: 20%"
+                ></div>
+                <div
+                  class="particle"
+                  style="--delay: 7s; --x: 90%; --y: 50%"
+                ></div>
+                <div
+                  class="particle"
+                  style="--delay: 8s; --x: 10%; --y: 80%"
+                ></div>
+                <div
+                  class="particle"
+                  style="--delay: 9s; --x: 75%; --y: 35%"
+                ></div>
+              </div>
+
+              <!-- Energia mística circular -->
+              <div class="mystic-energy">
+                <div class="energy-ring outer-ring"></div>
+                <div class="energy-ring middle-ring"></div>
+                <div class="energy-ring inner-ring"></div>
+              </div>
+
+              <!-- Galáxia interior girando -->
+              <div
+                class="galaxy-core"
+                [style.transform]="
+                  'translate(-50%, -50%) rotate(' + currentRotation + 'deg)'
+                "
+              >
+                <div class="cosmic-dust"></div>
+                <div class="stellar-field"></div>
+                <div class="nebula-swirl"></div>
+                <div class="center-orb"></div>
+              </div>
+
+              <!-- ✅ ATUALIZADO: Elementos flutuantes dos prêmios -->
+              <div
+                class="prize-elements"
+                *ngIf="!wheelSpinning && !selectedPrize"
+              >
+                <div
+                  *ngFor="let prize of prizes; let i = index"
+                  class="floating-symbol"
+                  [style.animation-delay]="i * 1 + 's'"
+                >
+                  <div class="symbol-glow">{{ prize.icon }}</div>
+                </div>
+              </div>
+
+              <!-- ✅ ATUALIZADO: Resultado no centro -->
+              <div
+                class="crystal-result"
+                *ngIf="selectedPrize && !wheelSpinning"
+              >
+                <div class="result-aura">
+                  <div class="result-symbol">{{ selectedPrize.icon }}</div>
+                  <div class="result-title">{{ selectedPrize.name }}</div>
+                </div>
+              </div>
+
+              <!-- Reflexos e brilhos do cristal -->
+              <div class="crystal-reflections">
+                <div class="reflection primary-reflection"></div>
+                <div class="reflection secondary-reflection"></div>
+                <div class="reflection tertiary-reflection"></div>
+              </div>
+
+              <!-- Aura exterior -->
+              <div class="crystal-aura"></div>
+            </div>
+
+            <!-- ✅ ATUALIZADO: Botão de ativação com controle completo -->
+            <div
+              class="oracle-activation"
+              [class.disabled]="
+                !canSpinWheel || wheelSpinning || isProcessingClick
+              "
+              [class.processing]="isProcessingClick"
+              (click)="spinWheel()"
+            >
+              <div class="activation-symbol">
+                <!-- Estado normal: pode girar -->
+                <div
+                  *ngIf="!wheelSpinning && !isProcessingClick && canSpinWheel"
+                  class="rune-circle"
+                >
+                  <span class="central-rune">◊</span>
+                </div>
+
+                <!-- Estado processando clique -->
+                <div
+                  *ngIf="isProcessingClick && !wheelSpinning"
+                  class="processing-click"
+                >
+                  <div class="click-loader"></div>
+                </div>
+
+                <!-- Estado girando -->
+                <div *ngIf="wheelSpinning" class="channeling-energy">
+                  <div class="energy-spiral"></div>
+                </div>
+
+                <!-- Estado bloqueado -->
+                <div
+                  *ngIf="!canSpinWheel && !wheelSpinning && !isProcessingClick"
+                  class="disabled-rune"
+                >
+                  <span class="locked-rune">🔒</span>
+                </div>
+              </div>
+
+              <div class="activation-label">
+                <!-- Texto quando pode girar -->
+                <span
+                  *ngIf="!wheelSpinning && !isProcessingClick && canSpinWheel"
+                >
+                  Consultar Oráculo
+                </span>
+
+                <!-- Texto processando -->
+                <span *ngIf="isProcessingClick && !wheelSpinning">
+                  Processando...
+                </span>
+
+                <!-- Texto quando está girando -->
+                <span *ngIf="wheelSpinning">Canalizando Energias...</span>
+
+                <!-- Texto quando já usou a tirada diária -->
+                <span
+                  *ngIf="
+                    !canSpinWheel &&
+                    !wheelSpinning &&
+                    !isProcessingClick &&
+                    hasUsedDailyFreeSpIn &&
+                    !hasFreeSpinsAvailable()
+                  "
+                >
+                  Você já consultou hoje
+                </span>
+
+                <!-- Texto com tempo restante -->
+                <span
+                  *ngIf="
+                    !canSpinWheel &&
+                    !wheelSpinning &&
+                    !isProcessingClick &&
+                    !hasUsedDailyFreeSpIn
+                  "
+                >
+                  Próxima consulta em: {{ getTimeUntilNextSpin() }}
+                </span>
+
+                <!-- Texto quando não há tiradas disponíveis -->
+                <span
+                  *ngIf="
+                    !canSpinWheel &&
+                    !wheelSpinning &&
+                    !isProcessingClick &&
+                    hasUsedDailyFreeSpIn &&
+                    !hasFreeSpinsAvailable()
+                  "
+                >
+                  Sem tiradas disponíveis
+                </span>
+              </div>
+
+              <!-- ✅ ATUALIZADO: Indicador de spins extras disponíveis -->
+              <div
+                class="extra-spins-indicator"
+                *ngIf="hasFreeSpinsAvailable()"
+              >
+                <span class="spins-count">
+                  🎰 {{ getWheelSpinsCount() }} tiradas de roleta
+                </span>
+              </div>
+
+              <!-- ✅ NOVO: Indicador de consultas disponíveis -->
+              <div
+                class="dream-consultations-indicator"
+                *ngIf="getDreamConsultationsCount() > 0"
+              >
+                <span class="consultations-count">
+                  🔮 {{ getDreamConsultationsCount() }} consultas de sonhos
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ✅ ATUALIZADO: Informação de estado da roleta -->
+          <div class="wheel-status">
+            <div class="status-info">
+              <!-- Info quando não está girando nem processando -->
+              <div
+                class="spin-info"
+                *ngIf="!wheelSpinning && !isProcessingClick"
+              >
+                <span
+                  *ngIf="
+                    canSpinWheel &&
+                    !hasUsedDailyFreeSpIn &&
+                    getWheelSpinsCount() === 0
+                  "
+                >
+                  🎁 Tirada diária gratuita disponível
+                </span>
+                <span *ngIf="canSpinWheel && getWheelSpinsCount() > 0">
+                  🎰 {{ getWheelSpinsCount() }} tiradas de roleta disponíveis
+                </span>
+                <span *ngIf="!canSpinWheel && !hasFreeSpinsAvailable()">
+                  ⏰ Sem tiradas disponíveis até amanhã
+                </span>
+              </div>
+
+              <!-- Info quando está processando -->
+              <div
+                class="processing-info"
+                *ngIf="isProcessingClick && !wheelSpinning"
+              >
+                <div class="processing-animation">
+                  <span class="process-icon">⚡</span>
+                  <span class="process-text">Preparando consulta...</span>
+                </div>
+              </div>
+
+              <!-- Info quando está girando -->
+              <div class="spinning-info" *ngIf="wheelSpinning">
+                <div class="spin-animation">
+                  <span class="swirl-icon">🌪️</span>
+                  <span class="spin-text"
+                    >As energias cósmicas estão decidindo...</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ✅ ATUALIZADO: Mensagem mística durante spinning -->
+          <div class="cosmic-message" *ngIf="wheelSpinning">
+            <div class="message-text">
+              <h3>As forças cósmicas revelam seu destino</h3>
+              <div class="cosmic-dots">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ✅ ATUALIZADO: Resultado final -->
+          <div
+            class="oracle-revelation"
+            *ngIf="selectedPrize && !wheelSpinning"
+          >
+            <div class="revelation-scroll">
+              <h3>O Oráculo Falou</h3>
+              <div class="destiny-manifest">
+                <div class="manifest-symbol">{{ selectedPrize.icon }}</div>
+                <div class="manifest-text">{{ selectedPrize.name }}</div>
+              </div>
+
+              <!-- ✅ ATUALIZADO: Informação específica do prêmio -->
+              <div class="prize-description" *ngIf="selectedPrize">
+                <p *ngIf="selectedPrize.id === '1'">
+                  🎰 Você ganhou 3 tiradas adicionais para a roleta do oráculo
+                  <br /><strong
+                    >Tiradas disponíveis: {{ getWheelSpinsCount() }}</strong
+                  >
+                </p>
+                <p *ngIf="selectedPrize.id === '2'">
+                  🔮 Uma consulta gratuita de interpretação de sonhos te espera
+                  <br /><strong
+                    >Consultas disponíveis:
+                    {{ getDreamConsultationsCount() }}</strong
+                  >
+                </p>
+                <p *ngIf="selectedPrize.id === '3'">
+                  🎯 2 tiradas extras de roleta foram adicionadas à sua conta
+                  <br /><strong
+                    >Tiradas disponíveis: {{ getWheelSpinsCount() }}</strong
+                  >
+                </p>
+                <p *ngIf="selectedPrize.id === '4'">
+                  🔄 As energias te concedem uma tirada imediata adicional
+                  <br /><strong
+                    >Tiradas disponíveis: {{ getWheelSpinsCount() }}</strong
+                  >
+                </p>
+              </div>
+
+              <!-- ✅ NOVO: Botões inteligentes segundo o tipo de prêmio -->
+              <div class="prize-actions">
+                <!-- ✅ BOTÃO CONTINUAR para prêmios que concedem tiradas -->
+                <button
+                  class="continue-spinning-btn"
+                  (click)="continueSpinning()"
+                  *ngIf="
+                    shouldShowContinueButton(selectedPrize) &&
+                    getWheelSpinsCount() > 0
+                  "
+                >
+                  <span class="continue-icon">🎲</span>
+                  ¡Continuar Girando! ({{ getWheelSpinsCount() }} tiradas)
+                </button>
+
+                <!-- ✅ MENSAGEM quando ganhou tiradas mas já não tem mais -->
+                <div
+                  class="no-more-spins-message"
+                  *ngIf="
+                    shouldShowContinueButton(selectedPrize) &&
+                    getWheelSpinsCount() === 0
+                  "
+                >
+                  <p>🎯 Prêmio reclamado corretamente</p>
+                  <button
+                    class="accept-destiny-btn"
+                    (click)="onWheelClosedHandler()"
+                  >
+                    Fechar
+                  </button>
+                </div>
+
+                <!-- ✅ BOTÃO FECHAR só para consulta grátis -->
+                <button
+                  class="accept-destiny-btn"
+                  (click)="onWheelClosedHandler()"
+                  *ngIf="shouldShowCloseButton(selectedPrize)"
+                >
+                  Aceitar Destino
+                </button>
+              </div>
+
+              <!-- ✅ NOVO: Estado atual de recursos -->
+              <div class="current-resources" *ngIf="selectedPrize">
+                <h4>📊 Recursos Atuais:</h4>
+                <div class="resource-summary">
+                  <div class="resource-item">
+                    <span class="resource-icon">🎰</span>
+                    <span class="resource-count">{{
+                      getWheelSpinsCount()
+                    }}</span>
+                    <span class="resource-label">Tiradas de Roleta</span>
+                  </div>
+                  <div class="resource-item">
+                    <span class="resource-icon">🔮</span>
+                    <span class="resource-count">{{
+                      getDreamConsultationsCount()
+                    }}</span>
+                    <span class="resource-label">Consultas disponíveis</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ✅ NOVO: Painel de recursos disponíveis -->
+          <div class="resources-panel" *ngIf="!wheelSpinning && !selectedPrize">
+            <div class="resource-item" *ngIf="getWheelSpinsCount() > 0">
+              <span class="resource-icon">🎰</span>
+              <span class="resource-text"
+                >{{ getWheelSpinsCount() }} Tiradas de Roleta</span
+              >
+            </div>
+            <div class="resource-item" *ngIf="getDreamConsultationsCount() > 0">
+              <span class="resource-icon">🔮</span>
+              <span class="resource-text"
+                >{{ getDreamConsultationsCount() }} Consultas disponíveis</span
+              >
+            </div>
+            <div
+              class="resource-item"
+              *ngIf="
+                getWheelSpinsCount() === 0 &&
+                getDreamConsultationsCount() === 0 &&
+                canSpinWheel
+              "
+            >
+              <span class="resource-icon">🎁</span>
+              <span class="resource-text">Tirada Diária Disponível</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
