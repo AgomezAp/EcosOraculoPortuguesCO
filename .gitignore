@@ -1,5 +1,8 @@
 /Ecos-backend/.env
-
+/Ecos-frontend/package-lock.json
+/Ecos-frontend/node_modules
+/Ecos-backend/node_modules
+/Ecos-backend/package-lock.json
 # --- IGNORE ---
 # docs --- IGNORE ---
 

@@ -25,6 +25,7 @@ const tabla_nacimiento_1 = __importDefault(require("../routes/tabla-nacimiento")
 const zodiaco_chino_1 = __importDefault(require("../routes/zodiaco-chino"));
 const calculadora_amor_1 = __importDefault(require("../routes/calculadora-amor"));
 const Pagos_1 = __importDefault(require("../routes/Pagos"));
+const paypal_1 = __importDefault(require("../routes/paypal"));
 const recolecta_1 = __importDefault(require("../routes/recolecta"));
 const recolecta_datos_1 = require("./recolecta-datos");
 const page_views_1 = require("./page_views");
@@ -82,6 +83,7 @@ class Server {
         this.app.use(zodiaco_chino_1.default);
         this.app.use(calculadora_amor_1.default);
         this.app.use(Pagos_1.default);
+        this.app.use("/api/paypal", paypal_1.default);
         this.app.use(recolecta_1.default);
         this.app.use(analytics_1.default);
         this.app.use(sugerencia_1.default);
