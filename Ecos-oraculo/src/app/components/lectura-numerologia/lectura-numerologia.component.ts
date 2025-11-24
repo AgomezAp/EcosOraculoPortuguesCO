@@ -692,7 +692,7 @@ export class LecturaNumerologiaComponent
 
     try {
       await this.paypalService.initiatePayment({
-        amount: '5.00',
+        amount: '4.00',
         currency: 'EUR',
         serviceName: 'Leitura de Numerologia',
         returnPath: '/leitura-numerologia',

@@ -574,7 +574,7 @@ Qual aspecto de sua carta natal você gostaria de explorar primeiro?`,
 
     try {
       await this.paypalService.initiatePayment({
-        amount: '5.00',
+        amount: '4.00',
         currency: 'EUR',
         serviceName: 'tabela-nascimento',
         returnPath: '/tabela-nascimento',

@@ -676,7 +676,7 @@ export class InformacionZodiacoComponent
 
     try {
       await this.paypalService.initiatePayment({
-        amount: '5.00',
+        amount: '4.00',
         currency: 'EUR',
         serviceName: 'informacao zodiaco',
         returnPath: '/informacao-zodiaco',
