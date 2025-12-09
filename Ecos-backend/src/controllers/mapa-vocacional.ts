@@ -50,9 +50,13 @@ export class VocationalController {
 
   // ✅ LISTA DE MODELOS DE BACKUP (em ordem de preferência)
   private readonly MODELS_FALLBACK = [
-    "gemini-2.0-flash-exp",
+    "gemini-2.5-flash-live",
     "gemini-2.5-flash",
+    "gemini-2.5-flash-preview-09-2025",
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash-lite-preview-09-2025",
     "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
   ];
 
   constructor() {
