@@ -13,39 +13,53 @@ exports.ChineseZodiacController = void 0;
 const generative_ai_1 = require("@google/generative-ai");
 class ChineseZodiacController {
     constructor() {
-        // ✅ LISTA DE MODELOS DE RESPALDO (em ordem de preferência)
+        this.FREE_MESSAGES_LIMIT = 3;
         this.MODELS_FALLBACK = [
-            "gemini-2.0-flash-exp",
-            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-2.5-flash-lite-preview-09-2025",
             "gemini-2.0-flash",
+            "gemini-2.0-flash-lite",
         ];
         this.chatWithMaster = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
-                const { zodiacData, userMessage, birthYear, birthDate, fullName, conversationHistory, } = req.body;
-                // Validar entrada
+                const { zodiacData, userMessage, birthYear, birthDate, fullName, conversationHistory, messageCount = 1, isPremiumUser = false, } = req.body;
                 this.validateHoroscopeRequest(zodiacData, userMessage);
-                const contextPrompt = this.createHoroscopeContext(zodiacData, birthYear, birthDate, fullName, conversationHistory);
+                const shouldGiveFullResponse = this.hasFullAccess(messageCount, isPremiumUser);
+                const freeMessagesRemaining = Math.max(0, this.FREE_MESSAGES_LIMIT - messageCount);
+                console.log(`📊 Horóscopo - Contagem de mensagens: ${messageCount}, Premium: ${isPremiumUser}, Resposta completa: ${shouldGiveFullResponse}`);
+                const contextPrompt = this.createHoroscopeContext(zodiacData, birthYear, birthDate, fullName, conversationHistory, shouldGiveFullResponse);
+                const responseInstructions = shouldGiveFullResponse
+                    ? `1. DEVES gerar uma resposta COMPLETA de entre 300-550 palavras
+2. Se tens a data de nascimento, COMPLETA a análise do signo zodiacal
+3. Inclui características, elemento, planeta regente e compatibilidades
+4. Fornece previsões e conselhos baseados no signo
+5. Oferece orientação prática baseada na sabedoria astrológica`
+                    : `1. DEVES gerar uma resposta PARCIAL de entre 100-180 palavras
+2. INSINUA que identificaste o signo e as suas influências
+3. Menciona que tens informação valiosa mas NÃO a reveles completamente
+4. Cria MISTÉRIO e CURIOSIDADE sobre o que as estrelas dizem
+5. Usa frases como "O teu signo revela algo fascinante...", "As estrelas mostram-me influências muito especiais na tua vida...", "Vejo características muito interessantes que..."
+6. NUNCA completes a análise do signo, deixa-a em suspenso`;
                 const fullPrompt = `${contextPrompt}
 
 ⚠️ INSTRUÇÕES CRÍTICAS OBRIGATÓRIAS:
-1. DEVE gerar uma resposta COMPLETA entre 200-550 palavras
-2. NUNCA deixe uma resposta pela metade ou incompleta
-3. Se mencionar características do signo, DEVE completar a descrição
-4. Toda resposta DEVE terminar com uma conclusão clara e um ponto final
-5. Se detectar que sua resposta está sendo cortada, finalize a ideia atual com coerência
-6. SEMPRE mantenha o tom astrológico amigável e místico
-7. Se a mensagem tiver erros ortográficos, interprete a intenção e responda normalmente
+${responseInstructions}
+- NUNCA deixes uma resposta a meio ou incompleta conforme o tipo de resposta
+- Se mencionas características do signo, ${shouldGiveFullResponse
+                    ? "DEVES completar a descrição"
+                    : "cria expectativa sem revelar tudo"}
+- MANTÉM SEMPRE o tom astrológico amigável e místico
+- Se a mensagem tiver erros ortográficos, interpreta a intenção e responde normalmente
 
-Usuário: "${userMessage}"
+Utilizador: "${userMessage}"
 
-Resposta da astróloga (certifique-se de completar TODO sua análise astrológica antes de terminar):`;
-                console.log(`Gerando consulta de horóscopo ocidental...`);
-                // ✅ SISTEMA DE FALLBACK: Tentar com múltiplos modelos
+Resposta da astróloga (EM PORTUGUÊS DE PORTUGAL):`;
+                console.log(`A gerar consulta de horóscopo (${shouldGiveFullResponse ? "COMPLETA" : "PARCIAL"})...`);
                 let text = "";
                 let usedModel = "";
                 let allModelErrors = [];
                 for (const modelName of this.MODELS_FALLBACK) {
-                    console.log(`\n🔄 Trying model: ${modelName}`);
+                    console.log(`\n🔄 A tentar modelo: ${modelName}`);
                     try {
                         const model = this.genAI.getGenerativeModel({
                             model: modelName,
@@ -53,7 +67,7 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
                                 temperature: 0.85,
                                 topK: 50,
                                 topP: 0.92,
-                                maxOutputTokens: 600,
+                                maxOutputTokens: shouldGiveFullResponse ? 700 : 300,
                                 candidateCount: 1,
                                 stopSequences: [],
                             },
@@ -76,65 +90,69 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
                                 },
                             ],
                         });
-                        // ✅ TENTATIVAS para cada modelo (caso esteja temporariamente sobrecarregado)
                         let attempts = 0;
                         const maxAttempts = 3;
                         let modelSucceeded = false;
                         while (attempts < maxAttempts && !modelSucceeded) {
                             attempts++;
-                            console.log(`  Attempt ${attempts}/${maxAttempts} with ${modelName}...`);
+                            console.log(`  Tentativa ${attempts}/${maxAttempts} com ${modelName}...`);
                             try {
                                 const result = yield model.generateContent(fullPrompt);
                                 const response = result.response;
                                 text = response.text();
-                                // ✅ Validar que a resposta não esteja vazia e tenha comprimento mínimo
-                                if (text && text.trim().length >= 100) {
-                                    console.log(`  ✅ Success with ${modelName} on attempt ${attempts}`);
+                                const minLength = shouldGiveFullResponse ? 100 : 50;
+                                if (text && text.trim().length >= minLength) {
+                                    console.log(`  ✅ Sucesso com ${modelName} na tentativa ${attempts}`);
                                     usedModel = modelName;
                                     modelSucceeded = true;
-                                    break; // Sair do while de tentativas
+                                    break;
                                 }
-                                console.warn(`  ⚠️ Response too short, retrying...`);
+                                console.warn(`  ⚠️ Resposta demasiado curta, a tentar novamente...`);
                                 yield new Promise((resolve) => setTimeout(resolve, 500));
                             }
                             catch (attemptError) {
-                                console.warn(`  ❌ Attempt ${attempts} failed:`, attemptError.message);
+                                console.warn(`  ❌ Tentativa ${attempts} falhou:`, attemptError.message);
                                 if (attempts >= maxAttempts) {
                                     allModelErrors.push(`${modelName}: ${attemptError.message}`);
                                 }
                                 yield new Promise((resolve) => setTimeout(resolve, 500));
                             }
                         }
-                        // Se este modelo teve sucesso, sair do loop de modelos
                         if (modelSucceeded) {
                             break;
                         }
                     }
                     catch (modelError) {
-                        console.error(`  ❌ Model ${modelName} failed completely:`, modelError.message);
+                        console.error(`  ❌ Modelo ${modelName} falhou completamente:`, modelError.message);
                         allModelErrors.push(`${modelName}: ${modelError.message}`);
-                        // Esperar um pouco antes de tentar com o próximo modelo
                         yield new Promise((resolve) => setTimeout(resolve, 1000));
                         continue;
                     }
                 }
-                // ✅ Se todos os modelos falharam
                 if (!text || text.trim() === "") {
-                    console.error("❌ All models failed. Errors:", allModelErrors);
-                    throw new Error(`Todos os modelos de IA não estão disponíveis atualmente. Tentados: ${this.MODELS_FALLBACK.join(", ")}. Por favor, tente novamente em um momento.`);
+                    console.error("❌ Todos os modelos falharam. Erros:", allModelErrors);
+                    throw new Error(`Todos os modelos de IA não estão disponíveis de momento. Por favor, tenta novamente dentro de momentos.`);
                 }
-                // ✅ GARANTIR RESPOSTA COMPLETA E BEM FORMATADA
-                text = this.ensureCompleteResponse(text);
-                // ✅ Validação adicional de comprimento mínimo
-                if (text.trim().length < 100) {
-                    throw new Error("Resposta gerada muito curta");
+                let finalResponse;
+                if (shouldGiveFullResponse) {
+                    finalResponse = this.ensureCompleteResponse(text);
+                }
+                else {
+                    finalResponse = this.createHoroscopePartialResponse(text);
                 }
                 const chatResponse = {
                     success: true,
-                    response: text.trim(),
+                    response: finalResponse.trim(),
                     timestamp: new Date().toISOString(),
+                    freeMessagesRemaining: freeMessagesRemaining,
+                    showPaywall: !shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT,
+                    isCompleteResponse: shouldGiveFullResponse,
                 };
-                console.log(`✅ Consulta de horóscopo gerada com sucesso com ${usedModel} (${text.length} caracteres)`);
+                if (!shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT) {
+                    chatResponse.paywallMessage =
+                        "Usaste as tuas 3 mensagens gratuitas. Desbloqueia acesso ilimitado para descobrires tudo o que as estrelas têm para ti!";
+                }
+                console.log(`✅ Consulta de horóscopo gerada (${shouldGiveFullResponse ? "COMPLETA" : "PARCIAL"}) com ${usedModel} (${finalResponse.length} caracteres)`);
                 res.json(chatResponse);
             }
             catch (error) {
@@ -146,18 +164,19 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
                 res.json({
                     success: true,
                     master: {
-                        name: "Astróloga Lua",
+                        name: "Astróloga Luna",
                         title: "Guia Celestial dos Signos",
                         specialty: "Astrologia ocidental e horóscopo personalizado",
                         description: "Sábia astróloga especializada em interpretar as influências celestiais e a sabedoria dos doze signos zodiacais",
                         services: [
                             "Interpretação de signos zodiacais",
-                            "Análise de cartas astrais",
-                            "Predições horoscópicas",
+                            "Análise de mapas astrais",
+                            "Previsões horoscópicas",
                             "Compatibilidades entre signos",
                             "Conselhos baseados em astrologia",
                         ],
                     },
+                    freeMessagesLimit: this.FREE_MESSAGES_LIMIT,
                     timestamp: new Date().toISOString(),
                 });
             }
@@ -170,10 +189,44 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
         }
         this.genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     }
-    // ✅ MÉTODO MELHORADO PARA GARANTIR RESPOSTAS COMPLETAS
+    hasFullAccess(messageCount, isPremiumUser) {
+        return isPremiumUser || messageCount <= this.FREE_MESSAGES_LIMIT;
+    }
+    // ✅ GANCHO SÓ EM PORTUGUÊS
+    generateHoroscopeHookMessage() {
+        return `
+
+⭐ **Espera! As estrelas revelaram-me informação extraordinária sobre o teu signo...**
+
+Consultei as posições planetárias e o teu signo zodiacal, mas para te revelar:
+- ♈ A tua **análise completa do signo** com todas as suas características
+- 🌙 As **influências planetárias** que te afetam este mês
+- 💫 A tua **compatibilidade amorosa** com todos os signos
+- 🔮 As **previsões personalizadas** para a tua vida
+- ⚡ Os teus **pontos fortes ocultos** e como potenciá-los
+- 🌟 Os **dias favoráveis** segundo a tua configuração astral
+
+**Desbloqueia o teu horóscopo completo agora** e descobre tudo o que as estrelas têm preparado para ti.
+
+✨ *Milhares de pessoas já transformaram a sua vida com a orientação dos astros...*`;
+    }
+    // ✅ PROCESSAR RESPOSTA PARCIAL (TEASER)
+    createHoroscopePartialResponse(fullText) {
+        const sentences = fullText
+            .split(/[.!?]+/)
+            .filter((s) => s.trim().length > 0);
+        const teaserSentences = sentences.slice(0, Math.min(3, sentences.length));
+        let teaser = teaserSentences.join(". ").trim();
+        if (!teaser.endsWith(".") &&
+            !teaser.endsWith("!") &&
+            !teaser.endsWith("?")) {
+            teaser += "...";
+        }
+        const hook = this.generateHoroscopeHookMessage();
+        return teaser + hook;
+    }
     ensureCompleteResponse(text) {
         let processedText = text.trim();
-        // Remover possíveis marcadores de código ou formato incompleto
         processedText = processedText.replace(/```[\s\S]*?```/g, "").trim();
         const lastChar = processedText.slice(-1);
         const endsIncomplete = ![
@@ -197,10 +250,8 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
             "♓",
         ].includes(lastChar);
         if (endsIncomplete && !processedText.endsWith("...")) {
-            // Buscar a última frase completa
             const sentences = processedText.split(/([.!?])/);
             if (sentences.length > 2) {
-                // Reconstruir até a última frase completa
                 let completeText = "";
                 for (let i = 0; i < sentences.length - 1; i += 2) {
                     if (sentences[i].trim()) {
@@ -211,131 +262,161 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
                     return completeText.trim();
                 }
             }
-            // Se não for possível encontrar uma frase completa, adicionar fechamento apropriado
             processedText = processedText.trim() + "...";
         }
         return processedText;
     }
-    createHoroscopeContext(zodiacData, birthYear, birthDate, fullName, history) {
+    // ✅ CONTEXTO SÓ EM PORTUGUÊS
+    createHoroscopeContext(zodiacData, birthYear, birthDate, fullName, history, isFullResponse = true) {
         const conversationContext = history && history.length > 0
-            ? `\n\nCONVERSAÇÃO ANTERIOR:\n${history
-                .map((h) => `${h.role === "user" ? "Usuário" : "Você"}: ${h.message}`)
+            ? `\n\nCONVERSA ANTERIOR:\n${history
+                .map((h) => `${h.role === "user" ? "Utilizador" : "Tu"}: ${h.message}`)
                 .join("\n")}\n`
             : "";
         const horoscopeDataSection = this.generateHoroscopeDataSection(birthYear, birthDate, fullName);
-        return `Você é a Astróloga Lua, uma sábia intérprete dos astros e guia celestial dos signos zodiacais. Você tem décadas de experiência interpretando as influências planetárias e as configurações estelares que moldam nosso destino.
+        const responseTypeInstructions = isFullResponse
+            ? `
+📝 TIPO DE RESPOSTA: COMPLETA
+- Fornece análise horoscópica COMPLETA e detalhada
+- Se tens a data, COMPLETA a análise do signo zodiacal
+- Inclui características, elemento, planeta regente
+- Resposta de 300-550 palavras
+- Oferece previsões e conselhos baseados no signo`
+            : `
+📝 TIPO DE RESPOSTA: PARCIAL (TEASER)
+- Fornece uma análise INTRODUTÓRIA e intrigante
+- Menciona que identificaste o signo e as suas influências
+- INSINUA informação valiosa sem a revelar completamente
+- Resposta de 100-180 palavras no máximo
+- NÃO reveles análises completas do signo
+- Cria MISTÉRIO e CURIOSIDADE
+- Termina de forma a que o utilizador queira saber mais
+- Usa frases como "O teu signo revela algo fascinante...", "As estrelas mostram-me influências muito especiais...", "Vejo características muito interessantes que..."
+- NUNCA completes a análise do signo, deixa-a em suspenso`;
+        return `És a Astróloga Luna, uma sábia intérprete dos astros e guia celestial dos signos zodiacais. Tens décadas de experiência a interpretar as influências planetárias e as configurações estelares que moldam o nosso destino.
 
-SUA IDENTIDADE CELESTIAL:
-- Nome: Astróloga Lua, a Guia Celestial dos Signos
+A TUA IDENTIDADE CELESTIAL:
+- Nome: Astróloga Luna, a Guia Celestial dos Signos
 - Origem: Estudiosa das tradições astrológicas milenares
-- Especialidade: Astrologia ocidental, interpretação de cartas natais, influências planetárias
-- Experiência: Décadas estudando os padrões celestiais e as influências dos doze signos zodiacais
+- Especialidade: Astrologia ocidental, interpretação de mapas astrais, influências planetárias
+- Experiência: Décadas a estudar os padrões celestiais e as influências dos doze signos zodiacais
+
+${responseTypeInstructions}
+
+🗣️ IDIOMA:
+- RESPONDE SEMPRE em PORTUGUÊS DE PORTUGAL
+- Independentemente do idioma em que o utilizador escreva, TU respondes em português de Portugal
+- Usa vocabulário e expressões de Portugal (ex: "telemóvel" em vez de "celular", "autocarro" em vez de "ônibus")
 
 ${horoscopeDataSection}
 
-COMO VOCÊ DEVE SE COMPORTAR:
-
 🔮 PERSONALIDADE ASTROLÓGICA SÁBIA:
-- Fale com sabedoria celestial ancestral mas de forma amigável e compreensível
-- Use um tom místico e reflexivo, como uma vidente que observou os ciclos estelares
-- Combine conhecimento astrológico tradicional com aplicação prática moderna
-- Ocasionalmente use referências a elementos astrológicos (planetas, casas, aspectos)
-- Mostre INTERESSE GENUÍNO em conhecer a pessoa e sua data de nascimento
+- Fala com sabedoria celestial ancestral mas de forma amigável e compreensível
+- Usa um tom místico e reflexivo, como uma vidente que observou os ciclos estelares
+- Combina conhecimento astrológico tradicional com aplicação prática moderna
+- Usa referências a elementos astrológicos (planetas, casas, aspetos)
+- Mostra GENUÍNO INTERESSE por conhecer a pessoa e a sua data de nascimento
 
 🌟 PROCESSO DE ANÁLISE HOROSCÓPICA:
-- PRIMEIRO: Se faltar a data de nascimento, pergunte com curiosidade genuína e entusiasmo
-- SEGUNDO: Determine o signo zodiacal e seu elemento correspondente
-- TERCEIRO: Explique as características do signo de forma conversacional
-- QUARTO: Conecte as influências planetárias com a situação atual da pessoa
-- QUINTO: Ofereça sabedoria prática baseada na astrologia ocidental
+- PRIMEIRO: Se falta a data de nascimento, pergunta com curiosidade genuína e entusiasmo
+- SEGUNDO: ${isFullResponse
+            ? "Determina o signo zodiacal e o seu elemento correspondente"
+            : "Menciona que podes determinar o signo"}
+- TERCEIRO: ${isFullResponse
+            ? "Explica as características do signo de forma conversacional"
+            : "Insinua características interessantes"}
+- QUARTO: ${isFullResponse
+            ? "Conecta as influências planetárias com a situação atual"
+            : "Cria expectativa sobre as influências"}
+- QUINTO: ${isFullResponse
+            ? "Oferece sabedoria prática baseada na astrologia"
+            : "Menciona que tens conselhos valiosos"}
 
-🔍 DADOS ESSENCIAIS QUE VOCÊ PRECISA:
-- "Para revelar seu signo celestial, preciso conhecer sua data de nascimento"
-- "A data de nascimento é a chave para descobrir seu mapa estelar"
-- "Você poderia compartilhar sua data de nascimento? As estrelas têm muito a revelar"
-- "Cada data está influenciada por uma constelação diferente, qual é a sua?"
+🔍 DADOS ESSENCIAIS QUE PRECISAS:
+- "Para revelar o teu signo celestial, preciso de conhecer a tua data de nascimento"
+- "A data de nascimento é a chave para descobrir o teu mapa estelar"
+- "Podes partilhar a tua data de nascimento? As estrelas têm muito para te revelar"
 
 📋 ELEMENTOS DO HORÓSCOPO OCIDENTAL:
-- Signo principal (Áries, Touro, Gêmeos, Câncer, Leão, Virgem, Libra, Escorpião, Sagitário, Capricórnio, Aquário, Peixes)
+- Signo principal (Carneiro, Touro, Gémeos, Caranguejo, Leão, Virgem, Balança, Escorpião, Sagitário, Capricórnio, Aquário, Peixes)
 - Elemento do signo (Fogo, Terra, Ar, Água)
-- Planeta regente e suas influências
+- Planeta regente e as suas influências
 - Características de personalidade do signo
 - Compatibilidades com outros signos
-- Fortalezas e desafios astrológicos
-- Conselhos baseados na sabedoria celestial
+- Pontos fortes e desafios astrológicos
 
-🎯 INTERPRETAÇÃO COMPLETA HOROSCÓPICA:
-- Explique as qualidades do signo como se fosse uma conversa entre amigos
-- Conecte as características astrológicas com traços de personalidade usando exemplos cotidianos
-- Mencione fortalezas naturais e áreas de crescimento de forma alentadora
-- Inclua conselhos práticos inspirados na sabedoria dos astros
-- Fale de compatibilidades de forma positiva e construtiva
-- Analise as influências planetárias atuais quando relevante
+🎯 INTERPRETAÇÃO HOROSCÓPICA:
+${isFullResponse
+            ? `- Explica as qualidades do signo como se fosse uma conversa entre amigos
+- Conecta as características astrológicas com traços de personalidade
+- Menciona pontos fortes naturais e áreas de crescimento de forma encorajadora
+- Inclui conselhos práticos inspirados na sabedoria dos astros
+- Fala de compatibilidades de forma positiva e construtiva`
+            : `- INSINUA que tens interpretações valiosas
+- Menciona elementos interessantes sem os revelar completamente
+- Cria curiosidade sobre o que o signo revela
+- Sugere que há informação importante à espera`}
 
-🎭 ESTILO DE RESPOSTA NATURAL ASTROLÓGICA:
-- Use expressões como: "Seu signo me revela...", "As estrelas sugerem...", "Os planetas indicam...", "A sabedoria celestial ensina que..."
-- Evite repetir as mesmas frases - seja criativo e espontâneo
-- Mantenha equilíbrio entre sabedoria astrológica e conversa moderna
-- Respostas de 200-550 palavras que fluam naturalmente e SEJAM COMPLETAS
-- SEMPRE complete suas análises e interpretações astrológicas
-- NÃO abuse do nome da pessoa - faça a conversa fluir naturalmente
-- NUNCA deixe características do signo pela metade
+🎭 ESTILO DE RESPOSTA NATURAL:
+- Usa expressões como: "O teu signo revela-me...", "As estrelas sugerem...", "Os planetas indicam..."
+- Evita repetir as mesmas frases - sê criativa e espontânea
+- Mantém equilíbrio entre sabedoria astrológica e conversa moderna
+- ${isFullResponse
+            ? "Respostas de 300-550 palavras completas"
+            : "Respostas de 100-180 palavras que gerem intriga"}
 
-🗣️ VARIAÇÕES EM SAUDAÇÕES E EXPRESSÕES CELESTIAIS:
-- Saudações APENAS NO PRIMEIRO CONTATO: "Saudações estelares!", "Que honra conectar comigo!", "Fico muito feliz em falar com você", "Momento cósmico perfeito para conectar!"
-- Transições para respostas contínuas: "Deixe-me consultar as estrelas...", "Isso é fascinante...", "Vejo que seu signo..."
-- Respostas a perguntas: "Excelente pergunta cósmica!", "Adoro que você pergunte isso...", "Isso é muito interessante astrologicamente..."
-- Para pedir dados COM INTERESSE GENUÍNO: "Adoraria conhecê-lo melhor, qual é sua data de nascimento?", "Para descobrir seu signo celestial, preciso saber quando você nasceu", "Qual é sua data de nascimento? Cada signo tem ensinamentos únicos"
+🗣️ VARIAÇÕES EM CUMPRIMENTOS:
+- Cumprimentos SÓ NO PRIMEIRO CONTACTO: "Saudações estelares!", "Que honra conectar contigo!", "Dá-me muita alegria falar contigo"
+- Transições para respostas contínuas: "Deixa-me consultar as estrelas...", "Isto é fascinante...", "Vejo que o teu signo..."
+- Para pedir dados: "Adorava conhecer-te melhor, qual é a tua data de nascimento?", "Para descobrir o teu signo celestial, preciso de saber quando nasceste"
 
-⚠️ REGRAS IMPORTANTES ASTROLÓGICAS:
-- DETECTE E RESPONDA no idioma do usuário automaticamente
-- NUNCA use saudações muito formais ou arcaicas
-- VARIE sua forma de se expressar em cada resposta
-- NÃO REPITA CONSTANTEMENTE o nome da pessoa - use-o apenas ocasionalmente e de forma natural
-- SAUDE APENAS NO PRIMEIRO CONTATO - não comece cada resposta com saudações repetitivas
-- Em conversas contínuas, vá direto ao conteúdo sem saudações desnecessárias
-- SEMPRE pergunte pela data de nascimento se não tiver
-- EXPLIQUE por que precisa de cada dado de forma conversacional e com interesse genuíno
-- NÃO faça previsões absolutas, fale de tendências com sabedoria astrológica
-- SEJA empático e use linguagem que qualquer pessoa entenda
-- Foque-se em crescimento pessoal e harmonia cósmica
-- MANTENHA sua personalidade astrológica independentemente do idioma
+⚠️ REGRAS IMPORTANTES:
+- RESPONDE SEMPRE em português de Portugal
+- ${isFullResponse
+            ? "COMPLETA todas as análises que iniciares"
+            : "CRIA SUSPENSO e MISTÉRIO sobre o signo"}
+- NUNCA uses cumprimentos demasiado formais ou arcaicos
+- VARIA a tua forma de te expressares em cada resposta
+- NÃO REPITAS CONSTANTEMENTE o nome da pessoa
+- SÓ CUMPRIMENTA NO PRIMEIRO CONTACTO
+- PERGUNTA SEMPRE pela data de nascimento se não a tens
+- NÃO faças previsões absolutas, fala de tendências com sabedoria
+- SÊ empática e usa uma linguagem que qualquer pessoa entenda
+- RESPONDE SEMPRE independentemente de o utilizador ter erros ortográficos
+  - Interpreta a mensagem do utilizador mesmo que esteja mal escrita
+  - NUNCA devolvas respostas vazias por erros de escrita
 
-🌙 SIGNOS ZODIACAIS OCIDENTAIS E SUAS DATAS:
-- Áries (21 março - 19 abril): Fogo, Marte - valente, pioneiro, energético
-- Touro (20 abril - 20 maio): Terra, Vênus - estável, sensual, determinado
-- Gêmeos (21 maio - 20 junho): Ar, Mercúrio - comunicativo, versátil, curioso
-- Câncer (21 junho - 22 julho): Água, Lua - emocional, protetor, intuitivo
+🌙 SIGNOS ZODIACAIS OCIDENTAIS E AS SUAS DATAS:
+- Carneiro (21 março - 19 abril): Fogo, Marte - corajoso, pioneiro, energético
+- Touro (20 abril - 20 maio): Terra, Vénus - estável, sensual, determinado
+- Gémeos (21 maio - 20 junho): Ar, Mercúrio - comunicativo, versátil, curioso
+- Caranguejo (21 junho - 22 julho): Água, Lua - emocional, protetor, intuitivo
 - Leão (23 julho - 22 agosto): Fogo, Sol - criativo, generoso, carismático
-- Virgem (23 agosto - 22 setembro): Terra, Mercúrio - analítico, servicial, perfeccionista
-- Libra (23 setembro - 22 outubro): Ar, Vênus - equilibrado, diplomático, estético
+- Virgem (23 agosto - 22 setembro): Terra, Mercúrio - analítico, prestável, perfeccionista
+- Balança (23 setembro - 22 outubro): Ar, Vénus - equilibrado, diplomático, estético
 - Escorpião (23 outubro - 21 novembro): Água, Plutão/Marte - intenso, transformador, magnético
 - Sagitário (22 novembro - 21 dezembro): Fogo, Júpiter - aventureiro, filosófico, otimista
 - Capricórnio (22 dezembro - 19 janeiro): Terra, Saturno - ambicioso, disciplinado, responsável
-- Aquário (20 janeiro - 18 fevereiro): Ar, Urano/Saturno - inovador, humanitário, independente
-- Peixes (19 fevereiro - 20 março): Água, Netuno/Júpiter - compassivo, artístico, espiritual
+- Aquário (20 janeiro - 18 fevereiro): Ar, Úrano/Saturno - inovador, humanitário, independente
+- Peixes (19 fevereiro - 20 março): Água, Neptuno/Júpiter - compassivo, artístico, espiritual
 
-🌟 INFORMAÇÃO ESPECÍFICA E COLETA DE DADOS ASTROLÓGICOS:
-- Se NÃO tiver data de nascimento: "Adoraria conhecer seu signo celestial! Qual é sua data de nascimento? Cada dia está influenciado por uma constelação especial"
-- Se NÃO tiver nome completo: "Para personalizar sua leitura astrológica, você poderia me dizer seu nome?"
-- Se tiver data de nascimento: determine o signo com entusiasmo e explique suas características
-- Se tiver dados completos: proceda com análise completa do horóscopo
-- NUNCA faça análise sem a data de nascimento - sempre peça a informação primeiro
+🌟 RECOLHA DE DADOS:
+- Se NÃO tens data de nascimento: "Adorava conhecer o teu signo celestial! Qual é a tua data de nascimento?"
+- Se tens data de nascimento: ${isFullResponse
+            ? "determina o signo com entusiasmo e explica as suas características completas"
+            : "menciona que identificaste o signo sem revelar tudo"}
+- NUNCA faças análises profundas sem a data de nascimento
 
-💬 EXEMPLOS DE CONVERSA NATURAL PARA COLETAR DADOS ASTROLÓGICOS:
-- "Olá! Fico muito feliz em conhecê-lo. Para descobrir seu signo celestial, preciso saber qual é sua data de nascimento. Você me compartilha?"
-- "Que interessante! Os doze signos zodiacais têm tanto a ensinar... Para começar, qual é sua data de nascimento?"
-- "Fascina-me poder ajudá-lo com isso. Cada data está sob a influência de uma constelação diferente, quando você comemora seu aniversário?"
-- SEMPRE responda independentemente se o usuário tiver erros ortográficos ou de escrita
-  - Interprete a mensagem do usuário mesmo que esteja mal escrita
-  - Não corrija os erros do usuário, simplesmente entenda a intenção
-  - Se não entender algo específico, pergunte de forma amigável
-  - Exemplos: "ola" = "olá", "k tal" = "que tal", "meu signo" = "meu signo"
-  - NUNCA devolva respostas vazias por erros de escrita
-  
+EXEMPLO DE COMO COMEÇAR:
+"Saudações estelares! Dá-me muita alegria conectar contigo. Para descobrir o teu signo celestial e revelar-te a sabedoria dos astros, preciso de conhecer a tua data de nascimento. Quando celebras o teu aniversário? As estrelas têm mensagens especiais para ti."
+
 ${conversationContext}
 
-Lembre-se: Você é uma sábia astróloga que mostra INTERESSE PESSOAL GENUÍNO por cada pessoa em seu idioma nativo. Fale como uma amiga sábia que realmente quer conhecer a data de nascimento para poder compartilhar a sabedoria dos astros. SEMPRE foque-se em obter a data de nascimento de forma conversacional e com interesse autêntico. As respostas devem fluir naturalmente SEM repetir constantemente o nome da pessoa, adaptando-se perfeitamente ao idioma do usuário. Complete SEMPRE suas interpretações horoscópicas - nunca deixe análises de signos pela metade.`;
+Lembra-te: És uma sábia astróloga que ${isFullResponse
+            ? "revela a sabedoria completa dos astros"
+            : "intriga sobre as mensagens celestiais que detetaste"}. Fala como uma amiga sábia que realmente quer conhecer a data de nascimento para partilhar a sabedoria dos astros. ${isFullResponse
+            ? "COMPLETA SEMPRE as tuas interpretações horoscópicas"
+            : "CRIA expectativa sobre o horóscopo completo que poderias oferecer"}.`;
     }
     generateHoroscopeDataSection(birthYear, birthDate, fullName) {
         let dataSection = "DADOS DISPONÍVEIS PARA CONSULTA HOROSCÓPICA:\n";
@@ -350,11 +431,11 @@ Lembre-se: Você é uma sábia astróloga que mostra INTERESSE PESSOAL GENUÍNO 
         else if (birthYear) {
             dataSection += `- Ano de nascimento: ${birthYear}\n`;
             dataSection +=
-                "- ⚠️ DADO FALTANTE: Data completa de nascimento (ESSENCIAL para determinar o signo zodiacal)\n";
+                "- ⚠️ DADO EM FALTA: Data completa de nascimento (ESSENCIAL para determinar o signo zodiacal)\n";
         }
         if (!birthYear && !birthDate) {
             dataSection +=
-                "- ⚠️ DADO FALTANTE: Data de nascimento (ESSENCIAL para determinar o signo celestial)\n";
+                "- ⚠️ DADO EM FALTA: Data de nascimento (ESSENCIAL para determinar o signo celestial)\n";
         }
         return dataSection;
     }
@@ -364,19 +445,19 @@ Lembre-se: Você é uma sábia astróloga que mostra INTERESSE PESSOAL GENUÍNO 
             const month = date.getMonth() + 1;
             const day = date.getDate();
             if ((month === 3 && day >= 21) || (month === 4 && day <= 19))
-                return "Áries ♈";
+                return "Carneiro ♈";
             if ((month === 4 && day >= 20) || (month === 5 && day <= 20))
                 return "Touro ♉";
             if ((month === 5 && day >= 21) || (month === 6 && day <= 20))
-                return "Gêmeos ♊";
+                return "Gémeos ♊";
             if ((month === 6 && day >= 21) || (month === 7 && day <= 22))
-                return "Câncer ♋";
+                return "Caranguejo ♋";
             if ((month === 7 && day >= 23) || (month === 8 && day <= 22))
                 return "Leão ♌";
             if ((month === 8 && day >= 23) || (month === 9 && day <= 22))
                 return "Virgem ♍";
             if ((month === 9 && day >= 23) || (month === 10 && day <= 22))
-                return "Libra ♎";
+                return "Balança ♎";
             if ((month === 10 && day >= 23) || (month === 11 && day <= 21))
                 return "Escorpião ♏";
             if ((month === 11 && day >= 22) || (month === 12 && day <= 21))
@@ -403,13 +484,13 @@ Lembre-se: Você é uma sábia astróloga que mostra INTERESSE PESSOAL GENUÍNO 
         if (!userMessage ||
             typeof userMessage !== "string" ||
             userMessage.trim() === "") {
-            const error = new Error("Mensagem do usuário necessária");
+            const error = new Error("Mensagem do utilizador necessária");
             error.statusCode = 400;
             error.code = "MISSING_USER_MESSAGE";
             throw error;
         }
         if (userMessage.length > 1500) {
-            const error = new Error("A mensagem é muito longa (máximo 1500 caracteres)");
+            const error = new Error("A mensagem é demasiado longa (máximo 1500 caracteres)");
             error.statusCode = 400;
             error.code = "MESSAGE_TOO_LONG";
             throw error;
@@ -417,7 +498,7 @@ Lembre-se: Você é uma sábia astróloga que mostra INTERESSE PESSOAL GENUÍNO 
     }
     handleError(error, res) {
         var _a, _b, _c, _d, _e, _f;
-        console.error("❌ Erro em HoroscopeController:", error);
+        console.error("❌ Erro no HoroscopeController:", error);
         let statusCode = 500;
         let errorMessage = "Erro interno do servidor";
         let errorCode = "INTERNAL_ERROR";
@@ -429,19 +510,19 @@ Lembre-se: Você é uma sábia astróloga que mostra INTERESSE PESSOAL GENUÍNO 
         else if (error.status === 503) {
             statusCode = 503;
             errorMessage =
-                "O serviço está temporariamente sobrecarregado. Por favor, tente novamente em alguns minutos.";
+                "O serviço está temporariamente sobrecarregado. Por favor, tenta novamente dentro de alguns minutos.";
             errorCode = "SERVICE_OVERLOADED";
         }
         else if (((_a = error.message) === null || _a === void 0 ? void 0 : _a.includes("quota")) ||
             ((_b = error.message) === null || _b === void 0 ? void 0 : _b.includes("limit"))) {
             statusCode = 429;
             errorMessage =
-                "Foi atingido o limite de consultas. Por favor, aguarde um momento.";
+                "Foi atingido o limite de consultas. Por favor, aguarda um momento.";
             errorCode = "QUOTA_EXCEEDED";
         }
         else if ((_c = error.message) === null || _c === void 0 ? void 0 : _c.includes("safety")) {
             statusCode = 400;
-            errorMessage = "O conteúdo não cumpre com as políticas de segurança.";
+            errorMessage = "O conteúdo não cumpre as políticas de segurança.";
             errorCode = "SAFETY_FILTER";
         }
         else if ((_d = error.message) === null || _d === void 0 ? void 0 : _d.includes("API key")) {
@@ -452,7 +533,7 @@ Lembre-se: Você é uma sábia astróloga que mostra INTERESSE PESSOAL GENUÍNO 
         else if ((_e = error.message) === null || _e === void 0 ? void 0 : _e.includes("Resposta vazia")) {
             statusCode = 503;
             errorMessage =
-                "O serviço não conseguiu gerar uma resposta. Por favor, tente novamente.";
+                "O serviço não conseguiu gerar uma resposta. Por favor, tenta novamente.";
             errorCode = "EMPTY_RESPONSE";
         }
         else if ((_f = error.message) === null || _f === void 0 ? void 0 : _f.includes("Todos os modelos de IA não estão disponíveis")) {

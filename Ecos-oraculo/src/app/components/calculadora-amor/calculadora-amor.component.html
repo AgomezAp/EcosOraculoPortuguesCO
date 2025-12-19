@@ -179,7 +179,7 @@
             ></textarea>
             <div
               class="character-count"
-              *ngIf="(currentMessage?.length || 0) > 800"
+              *ngIf="(currentMessage.length || 0) > 800"
             >
               {{ currentMessage || 0 }}/1000
             </div>
@@ -295,13 +295,5 @@
         </div>
       </div>
     </div>
-    <app-fortune-wheel
-      *ngIf="showFortuneWheel"
-      [isVisible]="showFortuneWheel"
-      [prizes]="lovePrizes"
-      (onPrizeWon)="onPrizeWon($event)"
-      (onWheelClosed)="onWheelClosed()"
-    >
-    </app-fortune-wheel>
   </body>
 </html>

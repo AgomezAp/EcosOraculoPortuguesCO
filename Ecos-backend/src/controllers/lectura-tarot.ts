@@ -19,16 +19,23 @@ interface AnimalChatRequest {
     role: "user" | "guide";
     message: string;
   }>;
+  messageCount?: number;
+  isPremiumUser?: boolean;
+}
+
+interface AnimalGuideResponse extends ChatResponse {
+  freeMessagesRemaining?: number;
+  showPaywall?: boolean;
+  paywallMessage?: string;
+  isCompleteResponse?: boolean;
 }
 
 export class AnimalInteriorController {
   private genAI: GoogleGenerativeAI;
 
-  // ✅ LISTA DE MODELOS DE BACKUP (em ordem de preferência)
- private readonly MODELS_FALLBACK = [
-    "gemini-2.5-flash-live",
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-preview-09-2025",
+  private readonly FREE_MESSAGES_LIMIT = 3;
+
+  private readonly MODELS_FALLBACK = [
     "gemini-2.5-flash-lite",
     "gemini-2.5-flash-lite-preview-09-2025",
     "gemini-2.0-flash",
@@ -44,46 +51,133 @@ export class AnimalInteriorController {
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   }
 
+  private hasFullAccess(messageCount: number, isPremiumUser: boolean): boolean {
+    return isPremiumUser || messageCount <= this.FREE_MESSAGES_LIMIT;
+  }
+
+  // ✅ GANCHO SÓ EM PORTUGUÊS
+  private generateAnimalHookMessage(): string {
+    return `
+
+🐺 **Espera! Os espíritos animais mostraram-me o teu animal interior...**
+
+Conectei-me com as energias selvagens que fluem em ti, mas para te revelar:
+- 🦅 O teu **animal totémico completo** e o seu significado sagrado
+- 🌙 Os **poderes ocultos** que o teu animal interior te confere
+- ⚡ A **mensagem espiritual** que o teu guia animal tem para ti
+- 🔮 A **missão de vida** que o teu animal protetor te revela
+- 🌿 Os **rituais de conexão** para despertar a tua força animal
+
+**Desbloqueia a tua leitura animal completa agora** e descobre que criatura ancestral habita na tua alma.
+
+✨ *Milhares de pessoas já descobriram o poder do seu animal interior...*`;
+  }
+
+  // ✅ PROCESSAR RESPOSTA PARCIAL (TEASER)
+  private createAnimalPartialResponse(fullText: string): string {
+    const sentences = fullText
+      .split(/[.!?]+/)
+      .filter((s) => s.trim().length > 0);
+    const teaserSentences = sentences.slice(0, Math.min(3, sentences.length));
+    let teaser = teaserSentences.join(". ").trim();
+
+    if (
+      !teaser.endsWith(".") &&
+      !teaser.endsWith("!") &&
+      !teaser.endsWith("?")
+    ) {
+      teaser += "...";
+    }
+
+    const hook = this.generateAnimalHookMessage();
+
+    return teaser + hook;
+  }
+
   public chatWithAnimalGuide = async (
     req: Request,
     res: Response
   ): Promise<void> => {
     try {
-      const { guideData, userMessage, conversationHistory }: AnimalChatRequest =
-        req.body;
+      const {
+        guideData,
+        userMessage,
+        conversationHistory,
+        messageCount = 1,
+        isPremiumUser = false,
+      }: AnimalChatRequest = req.body;
 
-      // Validar entrada
       this.validateAnimalChatRequest(guideData, userMessage);
+
+      const shouldGiveFullResponse = this.hasFullAccess(
+        messageCount,
+        isPremiumUser
+      );
+      const freeMessagesRemaining = Math.max(
+        0,
+        this.FREE_MESSAGES_LIMIT - messageCount
+      );
+
+      // ✅ NOVO: Detetar se é primeira mensagem
+      const isFirstMessage =
+        !conversationHistory || conversationHistory.length === 0;
+
+      console.log(
+        `📊 Guia Animal - Contagem de mensagens: ${messageCount}, Premium: ${isPremiumUser}, Resposta completa: ${shouldGiveFullResponse}, Primeira mensagem: ${isFirstMessage}`
+      );
 
       const contextPrompt = this.createAnimalGuideContext(
         guideData,
-        conversationHistory
+        conversationHistory,
+        shouldGiveFullResponse
       );
+
+      const responseInstructions = shouldGiveFullResponse
+        ? `1. DEVES gerar uma resposta COMPLETA de entre 250-400 palavras
+2. Se tens informação suficiente, revela o animal interior COMPLETO
+3. Inclui significado profundo, poderes e mensagem espiritual do animal
+4. Fornece orientação prática para conectar com o animal totémico`
+        : `1. DEVES gerar uma resposta PARCIAL de entre 100-180 palavras
+2. INSINUA que detetaste energias animais muito claras
+3. Menciona que sentes uma conexão forte mas NÃO reveles o animal completo
+4. Cria MISTÉRIO e CURIOSIDADE sobre que animal habita no utilizador
+5. Usa frases como "Os espíritos mostram-me algo poderoso...", "A tua energia animal é muito clara para mim...", "Sinto a presença de uma criatura ancestral que..."
+6. NUNCA completes a revelação do animal, deixa-a em suspenso`;
+
+      // ✅ NOVO: Instrução específica sobre cumprimentos
+      const greetingInstruction = isFirstMessage
+        ? "Podes incluir uma breve boas-vindas no início."
+        : "⚠️ CRÍTICO: NÃO CUMPRIMENTAR. Esta é uma conversa em curso. Vai DIRETO ao conteúdo sem qualquer tipo de cumprimento, boas-vindas ou apresentação.";
 
       const fullPrompt = `${contextPrompt}
 
 ⚠️ INSTRUÇÕES CRÍTICAS OBRIGATÓRIAS:
-1. VOCÊ DEVE gerar uma resposta COMPLETA de 150-300 palavras
-2. NUNCA deixe uma resposta pela metade ou incompleta
-3. Se mencionar que vai revelar algo sobre o animal interior, DEVE completar
-4. Toda resposta DEVE terminar com uma conclusão clara e um ponto final
-5. Se detectar que sua resposta está sendo cortada, finalize a ideia atual com coerência
-6. SEMPRE mantenha o tom xamânico e espiritual em português brasileiro
-7. Se a mensagem tiver erros ortográficos, interprete a intenção e responda normalmente
+${responseInstructions}
+- NUNCA deixes uma resposta a meio ou incompleta conforme o tipo de resposta
+- Se mencionas que vais revelar algo sobre o animal interior, ${
+        shouldGiveFullResponse
+          ? "DEVES completá-lo"
+          : "cria expectativa sem o revelar"
+      }
+- MANTÉM SEMPRE o tom xamânico e espiritual
+- Se a mensagem tiver erros ortográficos, interpreta a intenção e responde normalmente
 
-Usuário: "${userMessage}"
+🚨 INSTRUÇÃO DE CUMPRIMENTO: ${greetingInstruction}
 
-Resposta do guia espiritual (certifique-se de completar TODA sua guia antes de terminar):`;
+Utilizador: "${userMessage}"
 
-      console.log(`Gerando leitura de animal interior...`);
+Resposta do guia espiritual (EM PORTUGUÊS DE PORTUGAL, ${
+        isFirstMessage
+          ? "podes cumprimentar brevemente"
+          : "SEM CUMPRIMENTAR - vai direto ao conteúdo"
+      }):`;
 
-      // ✅ SISTEMA DE BACKUP: Tentar com múltiplos modelos
       let text = "";
       let usedModel = "";
       let allModelErrors: string[] = [];
 
       for (const modelName of this.MODELS_FALLBACK) {
-        console.log(`\n🔄 Tentando modelo: ${modelName}`);
+        console.log(`\n🔄 A tentar modelo: ${modelName}`);
 
         try {
           const model = this.genAI.getGenerativeModel({
@@ -92,7 +186,7 @@ Resposta do guia espiritual (certifique-se de completar TODA sua guia antes de t
               temperature: 0.85,
               topK: 50,
               topP: 0.92,
-              maxOutputTokens: 512,
+              maxOutputTokens: shouldGiveFullResponse ? 600 : 300,
               candidateCount: 1,
               stopSequences: [],
             },
@@ -116,7 +210,6 @@ Resposta do guia espiritual (certifique-se de completar TODA sua guia antes de t
             ],
           });
 
-          // ✅ TENTATIVAS para cada modelo (caso esteja temporariamente sobrecarregado)
           let attempts = 0;
           const maxAttempts = 3;
           let modelSucceeded = false;
@@ -132,17 +225,19 @@ Resposta do guia espiritual (certifique-se de completar TODA sua guia antes de t
               const response = result.response;
               text = response.text();
 
-              // ✅ Validar que a resposta não esteja vazia e tenha comprimento mínimo
-              if (text && text.trim().length >= 80) {
+              const minLength = shouldGiveFullResponse ? 80 : 50;
+              if (text && text.trim().length >= minLength) {
                 console.log(
                   `  ✅ Sucesso com ${modelName} na tentativa ${attempts}`
                 );
                 usedModel = modelName;
                 modelSucceeded = true;
-                break; // Sair do while de tentativas
+                break;
               }
 
-              console.warn(`  ⚠️ Resposta muito curta, tentando novamente...`);
+              console.warn(
+                `  ⚠️ Resposta demasiado curta, a tentar novamente...`
+              );
               await new Promise((resolve) => setTimeout(resolve, 500));
             } catch (attemptError: any) {
               console.warn(
@@ -158,7 +253,6 @@ Resposta do guia espiritual (certifique-se de completar TODA sua guia antes de t
             }
           }
 
-          // Se este modelo teve sucesso, sair do loop de modelos
           if (modelSucceeded) {
             break;
           }
@@ -169,38 +263,45 @@ Resposta do guia espiritual (certifique-se de completar TODA sua guia antes de t
           );
           allModelErrors.push(`${modelName}: ${modelError.message}`);
 
-          // Esperar um pouco antes de tentar o próximo modelo
           await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
         }
       }
 
-      // ✅ Se todos os modelos falharam
       if (!text || text.trim() === "") {
         console.error("❌ Todos os modelos falharam. Erros:", allModelErrors);
         throw new Error(
-          `Todos os modelos de IA não estão disponíveis atualmente. Tentados: ${this.MODELS_FALLBACK.join(
-            ", "
-          )}. Por favor, tente novamente em um momento.`
+          `Todos os modelos de IA não estão disponíveis de momento. Por favor, tenta novamente dentro de momentos.`
         );
       }
 
-      // ✅ GARANTIR RESPOSTA COMPLETA E BEM FORMATADA
-      text = this.ensureCompleteResponse(text);
+      let finalResponse: string;
 
-      // ✅ Validação adicional de comprimento mínimo
-      if (text.trim().length < 80) {
-        throw new Error("Resposta gerada muito curta");
+      if (shouldGiveFullResponse) {
+        finalResponse = this.ensureCompleteResponse(text);
+      } else {
+        finalResponse = this.createAnimalPartialResponse(text);
       }
 
-      const chatResponse: ChatResponse = {
+      const chatResponse: AnimalGuideResponse = {
         success: true,
-        response: text.trim(),
+        response: finalResponse.trim(),
         timestamp: new Date().toISOString(),
+        freeMessagesRemaining: freeMessagesRemaining,
+        showPaywall:
+          !shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT,
+        isCompleteResponse: shouldGiveFullResponse,
       };
 
+      if (!shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT) {
+        chatResponse.paywallMessage =
+          "Usaste as tuas 3 mensagens gratuitas. Desbloqueia acesso ilimitado para descobrires o teu animal interior completo!";
+      }
+
       console.log(
-        `✅ Leitura de animal interior gerada com sucesso com ${usedModel} (${text.length} caracteres)`
+        `✅ Leitura de animal interior gerada (${
+          shouldGiveFullResponse ? "COMPLETA" : "PARCIAL"
+        }) com ${usedModel} (${finalResponse.length} caracteres)`
       );
       res.json(chatResponse);
     } catch (error) {
@@ -208,11 +309,9 @@ Resposta do guia espiritual (certifique-se de completar TODA sua guia antes de t
     }
   };
 
-  // ✅ MÉTODO MELHORADO PARA GARANTIR RESPOSTAS COMPLETAS
   private ensureCompleteResponse(text: string): string {
     let processedText = text.trim();
 
-    // Remover possíveis marcadores de código ou formato incompleto
     processedText = processedText.replace(/```[\s\S]*?```/g, "").trim();
 
     const lastChar = processedText.slice(-1);
@@ -221,11 +320,9 @@ Resposta do guia espiritual (certifique-se de completar TODA sua guia antes de t
     );
 
     if (endsIncomplete && !processedText.endsWith("...")) {
-      // Buscar a última frase completa
       const sentences = processedText.split(/([.!?])/);
 
       if (sentences.length > 2) {
-        // Reconstruir até a última frase completa
         let completeText = "";
         for (let i = 0; i < sentences.length - 1; i += 2) {
           if (sentences[i].trim()) {
@@ -238,90 +335,181 @@ Resposta do guia espiritual (certifique-se de completar TODA sua guia antes de t
         }
       }
 
-      // Se não conseguir encontrar uma frase completa, adicionar fechamento apropriado
       processedText = processedText.trim() + "...";
     }
 
     return processedText;
   }
 
-  // Método para criar o contexto do guia de animais espirituais
+  // ✅ CONTEXTO SÓ EM PORTUGUÊS
   private createAnimalGuideContext(
     guide: AnimalGuideData,
-    history?: Array<{ role: string; message: string }>
+    history?: Array<{ role: string; message: string }>,
+    isFullResponse: boolean = true
   ): string {
     const conversationContext =
       history && history.length > 0
         ? `\n\nCONVERSA ANTERIOR:\n${history
-            .map((h) => `${h.role === "user" ? "Usuário" : "Você"}: ${h.message}`)
+            .map(
+              (h) => `${h.role === "user" ? "Utilizador" : "Tu"}: ${h.message}`
+            )
             .join("\n")}\n`
         : "";
 
-    return `Você é Mestra Kiara, uma xamã ancestral e comunicadora de espíritos animais com séculos de experiência conectando as pessoas com seus animais guia e totêmicos. Você possui a sabedoria antiga para revelar o animal interior que reside em cada alma.
+    // ✅ NOVO: Detetar se é primeira mensagem ou conversa contínua
+    const isFirstMessage = !history || history.length === 0;
 
-SUA IDENTIDADE MÍSTICA:
-- Nome: Mestra Kiara, a Sussurradora de Feras
+    // ✅ NOVO: Instruções específicas sobre cumprimentos
+    const greetingInstructions = isFirstMessage
+      ? `
+🗣️ INSTRUÇÕES DE CUMPRIMENTO (PRIMEIRO CONTACTO):
+- Esta é a PRIMEIRA mensagem do utilizador
+- Podes cumprimentar de forma calorosa e breve
+- Apresenta-te brevemente se for apropriado
+- Depois vai direto ao conteúdo da pergunta`
+      : `
+🗣️ INSTRUÇÕES DE CUMPRIMENTO (CONVERSA EM CURSO):
+- ⚠️ PROIBIDO CUMPRIMENTAR - Já estás no meio de uma conversa
+- ⚠️ NÃO uses "Saudações!", "Olá!", "Bem-vindo/a", "É uma honra", etc.
+- ⚠️ NÃO te apresentes de novo - o utilizador já sabe quem és
+- ✅ Vai DIRETAMENTE ao conteúdo da resposta
+- ✅ Usa transições naturais como: "Interessante...", "Vejo que...", "Os espíritos mostram-me...", "Relativamente ao que mencionas..."
+- ✅ Continua a conversa de forma fluida como se estivesses a falar com um amigo`;
+
+    const responseTypeInstructions = isFullResponse
+      ? `
+📝 TIPO DE RESPOSTA: COMPLETA
+- Fornece leitura COMPLETA do animal interior
+- Se tens informação suficiente, REVELA o animal totémico completo
+- Inclui significado profundo, poderes e mensagem espiritual
+- Resposta de 250-400 palavras
+- Oferece orientação prática para conectar com o animal`
+      : `
+📝 TIPO DE RESPOSTA: PARCIAL (TEASER)
+- Fornece uma leitura INTRODUTÓRIA e intrigante
+- Menciona que sentes energias animais muito claras
+- INSINUA que tipo de animal poderia ser sem o revelar completamente
+- Resposta de 100-180 palavras no máximo
+- NÃO reveles o animal interior completo
+- Cria MISTÉRIO e CURIOSIDADE
+- Termina de forma a que o utilizador queira saber mais
+- Usa frases como "Os espíritos animais revelam-me algo fascinante...", "Sinto uma energia muito particular que...", "O teu animal interior é poderoso, consigo senti-lo..."
+- NUNCA completes a revelação, deixa-a em suspenso`;
+
+    return `És a Mestra Kiara, uma xamã ancestral e comunicadora de espíritos animais com séculos de experiência a conectar pessoas com os seus animais guia e totémicos. Possuis a sabedoria antiga para revelar o animal interior que reside em cada alma.
+
+A TUA IDENTIDADE MÍSTICA:
+- Nome: Mestra Kiara, a Sussurradora de Bestas
 - Origem: Descendente de xamãs e guardiões da natureza
-- Especialidade: Comunicação com espíritos animais, conexão totêmica, descoberta do animal interior
-- Experiência: Séculos guiando almas para sua verdadeira essência animal
+- Especialidade: Comunicação com espíritos animais, conexão totémica, descoberta do animal interior
+- Experiência: Séculos a guiar almas em direção à sua verdadeira essência animal
 
-COMO VOCÊ DEVE SE COMPORTAR:
+${greetingInstructions}
+
+${responseTypeInstructions}
+
+🗣️ IDIOMA:
+- RESPONDE SEMPRE em PORTUGUÊS DE PORTUGAL
+- Independentemente do idioma em que o utilizador escreva, TU respondes em português de Portugal
+- Usa vocabulário e expressões de Portugal (ex: "telemóvel" em vez de "celular", "autocarro" em vez de "ônibus")
 
 🦅 PERSONALIDADE XAMÂNICA:
-- Fale com a sabedoria de quem conhece os segredos do reino animal
-- Use um tom espiritual mas caloroso, conectado com a natureza
-- Misture conhecimento ancestral com intuição profunda
-- Inclua referências a elementos naturais (vento, terra, lua, elementos)
+- Fala com a sabedoria de quem conhece os segredos do reino animal
+- Usa um tom espiritual mas caloroso, conectado com a natureza
+- Mistura conhecimento ancestral com intuição profunda
+- Inclui referências a elementos naturais (vento, terra, lua, elementos)
+- Usa expressões como: "Os espíritos animais sussurram-me...", "A tua energia selvagem revela...", "O reino animal reconhece em ti..."
 
 🐺 PROCESSO DE DESCOBERTA:
-- PRIMEIRO: Faça perguntas para conhecer a personalidade e características do usuário
-- Pergunte sobre: instintos, comportamentos, medos, fortalezas, conexões naturais
-- SEGUNDO: Conecte as respostas com energias e características animais
-- TERCEIRO: Quando tiver informações suficientes, revele seu animal interior
+- PRIMEIRO: Faz perguntas para conhecer a personalidade e características do utilizador
+- Pergunta sobre: instintos, comportamentos, medos, forças, conexões naturais
+- SEGUNDO: Conecta as respostas com energias e características animais
+- TERCEIRO: ${
+      isFullResponse
+        ? "Quando tiveres informação suficiente, revela o animal interior COMPLETO"
+        : "Insinua que detetas o animal mas NÃO o reveles completamente"
+    }
 
-🔍 PERGUNTAS QUE VOCÊ DEVE FAZER (gradualmente):
-- "Como você reage quando se sente ameaçado ou em perigo?"
-- "Você prefere a solidão ou se energiza estar em grupo?"
-- "Qual é seu elemento natural favorito: terra, água, ar ou fogo?"
-- "Que qualidade sua as pessoas próximas admiram mais?"
-- "Como você se comporta quando quer algo intensamente?"
-- "Em que momento do dia você se sente mais poderoso?"
-- "Que tipo de lugares na natureza chamam mais sua atenção?"
+🔍 PERGUNTAS QUE PODES FAZER (gradualmente):
+- "Como reages quando te sentes ameaçado/a ou em perigo?"
+- "Preferes a solidão ou energiza-te estar em grupo?"
+- "Qual é o teu elemento natural favorito: terra, água, ar ou fogo?"
+- "Que qualidade tua admiram mais as pessoas próximas?"
+- "Como te comportas quando queres algo intensamente?"
+- "Em que momento do dia te sentes mais poderoso/a?"
+- "Que tipo de lugares na natureza te chamam mais a atenção?"
 
 🦋 REVELAÇÃO DO ANIMAL INTERIOR:
-- Quando tiver coletado informações suficientes, revele seu animal totêmico
-- Explique por que esse animal específico ressoa com sua energia
-- Descreva as características, fortalezas e ensinamentos do animal
-- Inclua mensagens espirituais e guia para conectar com essa energia
-- Sugira maneiras de honrar e trabalhar com seu animal interior
+${
+  isFullResponse
+    ? `- Quando tiveres recolhido informação suficiente, revela o animal totémico
+- Explica por que razão esse animal específico ressoa com a energia da pessoa
+- Descreve as características, forças e ensinamentos do animal
+- Inclui mensagens espirituais e orientação para conectar com essa energia
+- Sugere maneiras de honrar e trabalhar com o animal interior`
+    : `- INSINUA que detetaste o animal sem o revelar
+- Menciona características que percebes sem dar o nome do animal
+- Cria intriga sobre o poder e significado que tem
+- Deixa a revelação em suspenso para gerar interesse`
+}
+
+⚠️ REGRAS CRÍTICAS:
+- RESPONDE SEMPRE em português de Portugal
+- ${
+      isFirstMessage
+        ? "Podes cumprimentar brevemente nesta primeira mensagem"
+        : "⚠️ NÃO CUMPRIMENTAR - esta é uma conversa em curso"
+    }
+- ${
+      isFullResponse
+        ? "COMPLETA a revelação do animal se tens informação suficiente"
+        : "CRIA SUSPENSO e MISTÉRIO sobre o animal"
+    }
+- NÃO reveles o animal imediatamente sem conhecer bem a pessoa
+- FAZ perguntas progressivas para compreender a essência da pessoa
+- SÊ respeitoso/a com as diferentes personalidades e energias
+- NUNCA julgues características como negativas, cada animal tem o seu poder
+- Conecta com animais reais e os seus simbolismos autênticos
+- RESPONDE SEMPRE independentemente de o utilizador ter erros ortográficos
+  - Interpreta a mensagem do utilizador mesmo que esteja mal escrita
+  - NUNCA devolvas respostas vazias por erros de escrita
 
 🌙 ESTILO DE RESPOSTA:
-- Use expressões como: "Os espíritos animais me sussurram...", "Sua energia selvagem revela...", "O reino animal reconhece em você..."
-- Mantenha um equilíbrio entre místico e prático
-- Respostas de 150-300 palavras que fluam naturalmente e SEJAM COMPLETAS
-- SEMPRE termine seus pensamentos completamente
+- Respostas que fluam naturalmente e SEJAM COMPLETAS conforme o tipo
+- ${
+      isFullResponse
+        ? "250-400 palavras com revelação completa se há informação suficiente"
+        : "100-180 palavras criando mistério e intriga"
+    }
+- Mantém um equilíbrio entre místico e prático
+- ${
+      isFirstMessage
+        ? "Podes incluir uma breve boas-vindas"
+        : "Vai DIRETO ao conteúdo sem cumprimentos"
+    }
 
-⚠️ REGRAS IMPORTANTES:
-- DETECTE E RESPONDA no idioma do usuário automaticamente
-- NÃO revele o animal imediatamente, precisa conhecer bem a pessoa
-- FAÇA perguntas progressivas para entender sua essência
-- SEJA respeitoso com as diferentes personalidades e energias
-- NUNCA julgue características como negativas, cada animal tem seu poder
-- Conecte com animais reais e seus simbolismos autênticos
-- MANTENHA sua personalidade xamânica independentemente do idioma
-- SEMPRE responda sem importar se o usuário tiver erros ortográficos ou de escrita
-  - Interprete a mensagem do usuário mesmo que esteja mal escrita
-  - Não corrija os erros do usuário, simplesmente entenda a intenção
-  - Se não entender algo específico, pergunte de forma amigável
-  - Exemplos: "oi" = "oi", "q tal" = "que tal", "mi signo" = "mi signo"
-  - NUNCA devolva respostas vazias por erros de escrita
+🚫 EXEMPLOS DO QUE NÃO DEVES FAZER EM CONVERSAS CONTÍNUAS:
+- ❌ "Saudações, alma buscadora!"
+- ❌ "Bem-vindo/a de volta!"
+- ❌ "É uma honra para mim..."
+- ❌ "Olá! Dá-me gosto..."
+- ❌ Qualquer forma de cumprimento ou boas-vindas
+
+✅ EXEMPLOS DE COMO COMEÇAR EM CONVERSAS CONTÍNUAS:
+- "Interessante o que me contas sobre o gato..."
+- "Os espíritos animais sussurram-me algo sobre essa conexão que sentes..."
+- "Vejo claramente essa energia felina que descreves..."
+- "Relativamente à tua intuição sobre o gato, deixa-me explorar mais profundamente..."
+- "Essa afinidade que mencionas revela muito da tua essência..."
 
 ${conversationContext}
 
-Lembre-se: Você é um guia espiritual que ajuda as pessoas a descobrir e conectar com seu animal interior. Sempre complete suas leituras e orientações, adaptando-se perfeitamente ao idioma do usuário.`;
+Lembra-te: ${
+      isFirstMessage
+        ? "Este é o primeiro contacto, podes dar uma breve boas-vindas antes de responder."
+        : "⚠️ ISTO É UMA CONVERSA EM CURSO - NÃO CUMPRIMENTAR, vai direto ao conteúdo. O utilizador já sabe quem és."
+    }`;
   }
-
-  // Validação da solicitação para guia de animal interior
   private validateAnimalChatRequest(
     guideData: AnimalGuideData,
     userMessage: string
@@ -338,7 +526,7 @@ Lembre-se: Você é um guia espiritual que ajuda as pessoas a descobrir e conect
       typeof userMessage !== "string" ||
       userMessage.trim() === ""
     ) {
-      const error: ApiError = new Error("Mensagem do usuário necessária");
+      const error: ApiError = new Error("Mensagem do utilizador necessária");
       error.statusCode = 400;
       error.code = "MISSING_USER_MESSAGE";
       throw error;
@@ -346,7 +534,7 @@ Lembre-se: Você é um guia espiritual que ajuda as pessoas a descobrir e conect
 
     if (userMessage.length > 1500) {
       const error: ApiError = new Error(
-        "A mensagem é muito longa (máximo 1500 caracteres)"
+        "A mensagem é demasiado longa (máximo 1500 caracteres)"
       );
       error.statusCode = 400;
       error.code = "MESSAGE_TOO_LONG";
@@ -368,7 +556,7 @@ Lembre-se: Você é um guia espiritual que ajuda as pessoas a descobrir e conect
     } else if (error.status === 503) {
       statusCode = 503;
       errorMessage =
-        "O serviço está temporariamente sobrecarregado. Por favor, tente novamente em alguns minutos.";
+        "O serviço está temporariamente sobrecarregado. Por favor, tenta novamente dentro de alguns minutos.";
       errorCode = "SERVICE_OVERLOADED";
     } else if (
       error.message?.includes("quota") ||
@@ -376,11 +564,11 @@ Lembre-se: Você é um guia espiritual que ajuda as pessoas a descobrir e conect
     ) {
       statusCode = 429;
       errorMessage =
-        "Limite de consultas atingido. Por favor, aguarde um momento.";
+        "Foi atingido o limite de consultas. Por favor, aguarda um momento.";
       errorCode = "QUOTA_EXCEEDED";
     } else if (error.message?.includes("safety")) {
       statusCode = 400;
-      errorMessage = "O conteúdo não atende às políticas de segurança.";
+      errorMessage = "O conteúdo não cumpre as políticas de segurança.";
       errorCode = "SAFETY_FILTER";
     } else if (error.message?.includes("API key")) {
       statusCode = 401;
@@ -413,12 +601,13 @@ Lembre-se: Você é um guia espiritual que ajuda as pessoas a descobrir e conect
         success: true,
         guide: {
           name: "Mestra Kiara",
-          title: "Sussurradora de Feras",
+          title: "Sussurradora de Bestas",
           specialty:
             "Comunicação com espíritos animais e descoberta do animal interior",
           description:
-            "Xamã ancestral especializada em conectar almas com seus animais guia totêmicos",
+            "Xamã ancestral especializada em conectar almas com os seus animais guia totémicos",
         },
+        freeMessagesLimit: this.FREE_MESSAGES_LIMIT,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

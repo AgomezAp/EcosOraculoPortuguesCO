@@ -23,21 +23,29 @@ interface BirthChartRequest {
     role: "user" | "astrologer";
     message: string;
   }>;
+  messageCount?: number;
+  isPremiumUser?: boolean;
+}
+
+interface BirthChartResponse extends ChatResponse {
+  freeMessagesRemaining?: number;
+  showPaywall?: boolean;
+  paywallMessage?: string;
+  isCompleteResponse?: boolean;
 }
 
 export class BirthChartController {
   private genAI: GoogleGenerativeAI;
 
-  // ✅ LISTA DE MODELOS DE BACKUP (em ordem de preferência)
+  private readonly FREE_MESSAGES_LIMIT = 3;
+
   private readonly MODELS_FALLBACK = [
-    "gemini-2.5-flash-live",
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-preview-09-2025",
     "gemini-2.5-flash-lite",
     "gemini-2.5-flash-lite-preview-09-2025",
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
   ];
+
   constructor() {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error(
@@ -45,6 +53,50 @@ export class BirthChartController {
       );
     }
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+
+  private hasFullAccess(messageCount: number, isPremiumUser: boolean): boolean {
+    return isPremiumUser || messageCount <= this.FREE_MESSAGES_LIMIT;
+  }
+
+  // ✅ GANCHO SÓ EM PORTUGUÊS
+  private generateBirthChartHookMessage(): string {
+    return `
+
+🌟 **Espera! O teu mapa astral revelou-me configurações extraordinárias...**
+
+Analisei as posições planetárias do teu nascimento, mas para te revelar:
+- 🌙 O teu **Ascendente completo** e como influencia a tua personalidade
+- ☀️ A **análise profunda do teu Sol e Lua** e a sua interação
+- 🪐 As **posições de todos os planetas** no teu mapa astral
+- 🏠 O significado das **12 casas astrológicas** na tua vida
+- ⭐ Os **aspetos planetários** que definem os teus desafios e talentos
+- 💫 A tua **missão de vida** segundo as estrelas
+
+**Desbloqueia o teu mapa astral completo agora** e descobre o mapa cósmico que os astros traçaram no momento do teu nascimento.
+
+✨ *Milhares de pessoas já descobriram o seu destino com o mapa astral completo...*`;
+  }
+
+  // ✅ PROCESSAR RESPOSTA PARCIAL (TEASER)
+  private createBirthChartPartialResponse(fullText: string): string {
+    const sentences = fullText
+      .split(/[.!?]+/)
+      .filter((s) => s.trim().length > 0);
+    const teaserSentences = sentences.slice(0, Math.min(3, sentences.length));
+    let teaser = teaserSentences.join(". ").trim();
+
+    if (
+      !teaser.endsWith(".") &&
+      !teaser.endsWith("!") &&
+      !teaser.endsWith("?")
+    ) {
+      teaser += "...";
+    }
+
+    const hook = this.generateBirthChartHookMessage();
+
+    return teaser + hook;
   }
 
   public chatWithAstrologer = async (
@@ -60,10 +112,24 @@ export class BirthChartController {
         birthPlace,
         fullName,
         conversationHistory,
+        messageCount = 1,
+        isPremiumUser = false,
       }: BirthChartRequest = req.body;
 
-      // Validar entrada
       this.validateBirthChartRequest(chartData, userMessage);
+
+      const shouldGiveFullResponse = this.hasFullAccess(
+        messageCount,
+        isPremiumUser
+      );
+      const freeMessagesRemaining = Math.max(
+        0,
+        this.FREE_MESSAGES_LIMIT - messageCount
+      );
+
+      console.log(
+        `📊 Mapa Astral - Contagem de mensagens: ${messageCount}, Premium: ${isPremiumUser}, Resposta completa: ${shouldGiveFullResponse}`
+      );
 
       const contextPrompt = this.createBirthChartContext(
         chartData,
@@ -71,33 +137,52 @@ export class BirthChartController {
         birthTime,
         birthPlace,
         fullName,
-        conversationHistory
+        conversationHistory,
+        shouldGiveFullResponse
       );
+
+      const responseInstructions = shouldGiveFullResponse
+        ? `1. DEVES gerar uma resposta COMPLETA de entre 300-500 palavras
+2. Se tens os dados, COMPLETA a análise do mapa astral
+3. Inclui análise de Sol, Lua, Ascendente e planetas principais
+4. Fornece interpretação de casas e aspetos relevantes
+5. Oferece orientação prática baseada na configuração planetária`
+        : `1. DEVES gerar uma resposta PARCIAL de entre 100-180 palavras
+2. INSINUA que detetaste configurações planetárias muito significativas
+3. Menciona que calculaste posições mas NÃO reveles a análise completa
+4. Cria MISTÉRIO e CURIOSIDADE sobre o que as estrelas dizem
+5. Usa frases como "O teu mapa astral mostra algo fascinante...", "As estrelas estavam numa configuração muito especial quando nasceste...", "Vejo posições planetárias que revelam..."
+6. NUNCA completes a análise astrológica, deixa-a em suspenso`;
 
       const fullPrompt = `${contextPrompt}
 
 ⚠️ INSTRUÇÕES CRÍTICAS OBRIGATÓRIAS:
-1. VOCÊ DEVE gerar uma resposta COMPLETA de 200-500 palavras
-2. NUNCA deixe uma resposta pela metade ou incompleta
-3. Se mencionar que vai analisar posições planetárias, DEVE completar a análise
-4. Toda resposta DEVE terminar com uma conclusão clara e um ponto final
-5. Se detectar que sua resposta está sendo cortada, finalize a ideia atual com coerência
-6. SEMPRE mantenha o tom astrológico profissional mas acessível
-7. Se a mensagem tiver erros ortográficos, interprete a intenção e responda normalmente
+${responseInstructions}
+- NUNCA deixes uma resposta a meio ou incompleta conforme o tipo de resposta
+- Se mencionas que vais analisar posições planetárias, ${
+        shouldGiveFullResponse
+          ? "DEVES completar a análise"
+          : "cria expectativa sem revelar os resultados"
+      }
+- MANTÉM SEMPRE o tom astrológico profissional mas acessível
+- Se a mensagem tiver erros ortográficos, interpreta a intenção e responde normalmente
 
-Usuário: "${userMessage}"
+Utilizador: "${userMessage}"
 
-Resposta da astróloga (certifique-se de completar TODO sua análise astrológica antes de terminar):`;
+Resposta da astróloga (EM PORTUGUÊS DE PORTUGAL):`;
 
-      console.log(`Gerando análise de mapa astral...`);
+      console.log(
+        `A gerar análise de mapa astral (${
+          shouldGiveFullResponse ? "COMPLETA" : "PARCIAL"
+        })...`
+      );
 
-      // ✅ SISTEMA DE BACKUP: Tentar com múltiplos modelos
       let text = "";
       let usedModel = "";
       let allModelErrors: string[] = [];
 
       for (const modelName of this.MODELS_FALLBACK) {
-        console.log(`\n🔄 Tentando modelo: ${modelName}`);
+        console.log(`\n🔄 A tentar modelo: ${modelName}`);
 
         try {
           const model = this.genAI.getGenerativeModel({
@@ -106,7 +191,7 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
               temperature: 0.85,
               topK: 50,
               topP: 0.92,
-              maxOutputTokens: 600,
+              maxOutputTokens: shouldGiveFullResponse ? 700 : 300,
               candidateCount: 1,
               stopSequences: [],
             },
@@ -130,7 +215,6 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
             ],
           });
 
-          // ✅ TENTATIVAS para cada modelo (caso esteja temporariamente sobrecarregado)
           let attempts = 0;
           const maxAttempts = 3;
           let modelSucceeded = false;
@@ -146,17 +230,19 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
               const response = result.response;
               text = response.text();
 
-              // ✅ Validar que a resposta não esteja vazia e tenha comprimento mínimo
-              if (text && text.trim().length >= 100) {
+              const minLength = shouldGiveFullResponse ? 100 : 50;
+              if (text && text.trim().length >= minLength) {
                 console.log(
                   `  ✅ Sucesso com ${modelName} na tentativa ${attempts}`
                 );
                 usedModel = modelName;
                 modelSucceeded = true;
-                break; // Sair do while de tentativas
+                break;
               }
 
-              console.warn(`  ⚠️ Resposta muito curta, tentando novamente...`);
+              console.warn(
+                `  ⚠️ Resposta demasiado curta, a tentar novamente...`
+              );
               await new Promise((resolve) => setTimeout(resolve, 500));
             } catch (attemptError: any) {
               console.warn(
@@ -172,7 +258,6 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
             }
           }
 
-          // Se este modelo teve sucesso, sair do loop de modelos
           if (modelSucceeded) {
             break;
           }
@@ -183,38 +268,45 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
           );
           allModelErrors.push(`${modelName}: ${modelError.message}`);
 
-          // Esperar um pouco antes de tentar o próximo modelo
           await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
         }
       }
 
-      // ✅ Se todos os modelos falharam
       if (!text || text.trim() === "") {
         console.error("❌ Todos os modelos falharam. Erros:", allModelErrors);
         throw new Error(
-          `Todos os modelos de IA não estão disponíveis atualmente. Tentados: ${this.MODELS_FALLBACK.join(
-            ", "
-          )}. Por favor, tente novamente em um momento.`
+          `Todos os modelos de IA não estão disponíveis de momento. Por favor, tenta novamente dentro de momentos.`
         );
       }
 
-      // ✅ GARANTIR RESPOSTA COMPLETA E BEM FORMATADA
-      text = this.ensureCompleteResponse(text);
+      let finalResponse: string;
 
-      // ✅ Validação adicional de comprimento mínimo
-      if (text.trim().length < 100) {
-        throw new Error("Resposta gerada muito curta");
+      if (shouldGiveFullResponse) {
+        finalResponse = this.ensureCompleteResponse(text);
+      } else {
+        finalResponse = this.createBirthChartPartialResponse(text);
       }
 
-      const chatResponse: ChatResponse = {
+      const chatResponse: BirthChartResponse = {
         success: true,
-        response: text.trim(),
+        response: finalResponse.trim(),
         timestamp: new Date().toISOString(),
+        freeMessagesRemaining: freeMessagesRemaining,
+        showPaywall:
+          !shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT,
+        isCompleteResponse: shouldGiveFullResponse,
       };
 
+      if (!shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT) {
+        chatResponse.paywallMessage =
+          "Usaste as tuas 3 mensagens gratuitas. Desbloqueia acesso ilimitado para obteres o teu mapa astral completo!";
+      }
+
       console.log(
-        `✅ Análise de mapa astral gerada com sucesso com ${usedModel} (${text.length} caracteres)`
+        `✅ Análise de mapa astral gerada (${
+          shouldGiveFullResponse ? "COMPLETA" : "PARCIAL"
+        }) com ${usedModel} (${finalResponse.length} caracteres)`
       );
       res.json(chatResponse);
     } catch (error) {
@@ -222,11 +314,9 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
     }
   };
 
-  // ✅ MÉTODO MELHORADO PARA GARANTIR RESPOSTAS COMPLETAS
   private ensureCompleteResponse(text: string): string {
     let processedText = text.trim();
 
-    // Remover possíveis marcadores de código ou formato incompleto
     processedText = processedText.replace(/```[\s\S]*?```/g, "").trim();
 
     const lastChar = processedText.slice(-1);
@@ -235,11 +325,9 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
     );
 
     if (endsIncomplete && !processedText.endsWith("...")) {
-      // Buscar a última frase completa
       const sentences = processedText.split(/([.!?])/);
 
       if (sentences.length > 2) {
-        // Reconstruir até a última frase completa
         let completeText = "";
         for (let i = 0; i < sentences.length - 1; i += 2) {
           if (sentences[i].trim()) {
@@ -252,26 +340,29 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
         }
       }
 
-      // Se não conseguir encontrar uma frase completa, adicionar fechamento apropriado
       processedText = processedText.trim() + "...";
     }
 
     return processedText;
   }
 
+  // ✅ CONTEXTO SÓ EM PORTUGUÊS
   private createBirthChartContext(
     chartData: BirthChartData,
     birthDate?: string,
     birthTime?: string,
     birthPlace?: string,
     fullName?: string,
-    history?: Array<{ role: string; message: string }>
+    history?: Array<{ role: string; message: string }>,
+    isFullResponse: boolean = true
   ): string {
+    const isFirstMessage = !history || history.length === 0;
+
     const conversationContext =
       history && history.length > 0
         ? `\n\nCONVERSA ANTERIOR:\n${history
             .map(
-              (h) => `${h.role === "user" ? "Usuário" : "Você"}: ${h.message}`
+              (h) => `${h.role === "user" ? "Utilizador" : "Tu"}: ${h.message}`
             )
             .join("\n")}\n`
         : "";
@@ -283,99 +374,75 @@ Resposta da astróloga (certifique-se de completar TODO sua análise astrológic
       fullName
     );
 
-    return `Você é Mestra Emma, uma astróloga cósmica ancestral especializada na elaboração e interpretação de mapas astrais completos. Você tem décadas de experiência desvendo os segredos do cosmos e as influências planetárias no momento do nascimento.
+    // ✅ NOVA SECÇÃO: Instruções de cumprimento condicional
+    const greetingInstructions = isFirstMessage
+      ? `
+🎯 CUMPRIMENTO INICIAL:
+- Esta é a PRIMEIRA mensagem da conversa
+- PODES cumprimentar de forma calorosa e apresentar-te brevemente
+- Exemplo: "Olá! Sou a Mestra Emma, a tua guia celestial..."`
+      : `
+🚫 NÃO CUMPRIMENTAR:
+- Esta é uma CONVERSA EM CURSO (há ${history?.length || 0} mensagens anteriores)
+- NÃO cumprimentar, NÃO te apresentes de novo
+- NÃO uses frases como "Olá!", "Bem-vindo/a!", "É um prazer conhecer-te"
+- CONTINUA a conversa de forma natural, como se estivesses no meio de uma conversa
+- Responde DIRETAMENTE ao que o utilizador pergunta ou diz`;
 
-SUA IDENTIDADE ASTROLÓGICA:
+    const responseTypeInstructions = isFullResponse
+      ? `
+📝 TIPO DE RESPOSTA: COMPLETA
+- Fornece análise de mapa astral COMPLETA e detalhada
+- Se tens os dados, COMPLETA a análise de Sol, Lua, Ascendente
+- Inclui interpretação de planetas e casas relevantes
+- Resposta de 300-500 palavras
+- Oferece orientação prática baseada na configuração`
+      : `
+📝 TIPO DE RESPOSTA: PARCIAL (TEASER)
+- Fornece uma análise INTRODUTÓRIA e intrigante
+- Menciona que detetas configurações planetárias significativas
+- INSINUA resultados de cálculos sem os revelar completamente
+- Resposta de 100-180 palavras no máximo
+- NÃO reveles análises completas de planetas ou casas
+- Cria MISTÉRIO e CURIOSIDADE
+- Termina de forma a que o utilizador queira saber mais`;
+
+    return `És a Mestra Emma, uma astróloga cósmica ancestral especializada na elaboração e interpretação de mapas astrais completos.
+
+A TUA IDENTIDADE ASTROLÓGICA:
 - Nome: Mestra Emma, a Cartógrafa Celestial
 - Origem: Herdeira de conhecimentos astrológicos milenares
-- Especialidade: Mapas astrais, posições planetárias, casas astrológicas, aspectos cósmicos
-- Experiência: Décadas interpretando as configurações celestes do momento do nascimento
+- Especialidade: Mapas astrais, posições planetárias, casas astrológicas
+
+${greetingInstructions}
+
+${responseTypeInstructions}
+
+🗣️ IDIOMA:
+- RESPONDE SEMPRE em PORTUGUÊS DE PORTUGAL
+- Usa vocabulário e expressões de Portugal (ex: "telemóvel" em vez de "celular", "autocarro" em vez de "ônibus")
 
 ${birthDataSection}
 
-COMO VOCÊ DEVE SE COMPORTAR:
-
 🌟 PERSONALIDADE ASTROLÓGICA:
-- Fale com sabedoria cósmica mas de forma acessível e amigável
-- Use um tom profissional mas caloroso, como uma especialista que gosta de compartilhar conhecimento
-- Combine precisão técnica astrológica com interpretações espirituais compreensíveis
-- Ocasionalmente use referências a planetas, casas astrológicas e aspectos cósmicos
-
-📊 PROCESSO DE CRIAÇÃO DE MAPA ASTRAL:
-- PRIMEIRO: Se faltarem dados, pergunte especificamente por data, hora e local de nascimento
-- SEGUNDO: Com dados completos, calcule o signo solar, ascendente e posições lunares
-- TERCEIRO: Analise as casas astrológicas e seu significado
-- QUARTO: Interprete aspectos planetários e sua influência
-- QUINTO: Ofereça uma leitura integral do mapa natal
-
-🔍 DADOS ESSENCIAIS QUE VOCÊ PRECISA:
-- "Para criar seu mapa astral preciso, preciso de sua data exata de nascimento"
-- "A hora de nascimento é crucial para determinar seu ascendente e as casas astrológicas"
-- "O local de nascimento me permite calcular as posições planetárias exatas"
-- "Você conhece a hora aproximada? Mesmo uma estimativa me ajuda muito"
-
-📋 ELEMENTOS DO MAPA ASTRAL:
-- Signo Solar (personalidade básica)
-- Signo Lunar (mundo emocional)
-- Ascendente (máscara social)
-- Posições de planetas em signos
-- Casas astrológicas (1ª a 12ª)
-- Aspectos planetários (conjunções, trígonos, quadraturas, etc.)
-- Elementos dominantes (Fogo, Terra, Ar, Água)
-- Modalidades (Cardinal, Fixo, Mutável)
-
-🎯 INTERPRETAÇÃO COMPLETA:
-- Explique cada elemento de forma clara e prática
-- Conecte as posições planetárias com traços de personalidade
-- Descreva como as casas influenciam diferentes áreas da vida
-- Mencione desafios e oportunidades baseados em aspectos planetários
-- Inclua conselhos para trabalhar com as energias cósmicas
-
-🎭 ESTILO DE RESPOSTA:
-- Use expressões como: "Seu mapa natal revela...", "As estrelas estavam assim configuradas...", "Os planetas te dotaram de..."
-- Mantenha equilíbrio entre técnico e místico
-- Respostas de 200-500 palavras para análises completas
-- SEMPRE termine suas interpretações completamente
-- NUNCA deixe análises planetárias pela metade
-
-⚠️ REGRAS IMPORTANTES:
-- NÃO crie um mapa sem pelo menos a data de nascimento
-- PERGUNTE por dados faltantes antes de fazer interpretações profundas
-- EXPLIQUE a importância de cada dado que solicita
-- SEJA precisa mas acessível em suas explicações técnicas
-- NUNCA faça previsões absolutas, fale de tendências e potenciais
-
-🗣️ MANEJO DE DADOS FALTANTES:
-- Sem data: "Para começar seu mapa natal, preciso conhecer sua data de nascimento. Quando você nasceu?"
-- Sem hora: "A hora de nascimento é essencial para seu ascendente. Você lembra aproximadamente a que hora nasceu?"
-- Sem local: "O local de nascimento me permite calcular as posições exatas. Em que cidade e país você nasceu?"
-- Dados incompletos: "Com esses dados posso fazer uma análise parcial, mas para um mapa completo precisaria..."
-
-📖 ESTRUTURA DE RESPOSTA COMPLETA:
-1. Análise do Sol (signo, casa, aspectos)
-2. Análise da Lua (signo, casa, aspectos)
-3. Ascendente e sua influência
-4. Planetas pessoais (Mercúrio, Vênus, Marte)
-5. Planetas sociais (Júpiter, Saturno)
-6. Síntese de elementos e modalidades
-7. Interpretação de casas mais destacadas
-8. Conselhos para trabalhar com sua energia cósmica
-
-💫 EXEMPLOS DE EXPRESSÕES NATURAIS:
-- "Seu Sol em [signo] te concede..."
-- "Com a Lua em [signo], seu mundo emocional..."
-- "Seu ascendente [signo] faz com que você projete..."
-- "Mercúrio em [signo] influencia sua forma de se comunicar..."
-- "Esta configuração planetária sugere..."
-- SEMPRE responda sem importar se o usuário tiver erros ortográficos ou de escrita
-  - Interprete a mensagem do usuário mesmo que esteja mal escrita
-  - Não corrija os erros do usuário, simplesmente entenda a intenção
-  - Se não entender algo específico, pergunte de forma amigável
-  - NUNCA devolva respostas vazias por erros de escrita
+- Fala com sabedoria cósmica mas de forma acessível e amigável
+- Usa um tom profissional mas caloroso
+- Combina precisão técnica astrológica com interpretações espirituais
 
 ${conversationContext}
 
-Lembre-se: Você é uma especialista astróloga que cria mapas astrais precisos e os interpreta de maneira compreensível. SEMPRE solicite os dados faltantes necessários antes de fazer análises profundas. Complete SEMPRE suas interpretações astrológicas - nunca deixe análises planetárias ou de casas pela metade.`;
+⚠️ REGRA CRÍTICA DE CONTINUIDADE:
+${
+  isFirstMessage
+    ? "- Podes apresentar-te brevemente já que é o primeiro contacto"
+    : "- PROIBIDO cumprimentar ou apresentar-te. O utilizador já te conhece. Vai DIRETO ao tema."
+}
+
+Lembra-te: ${
+      isFirstMessage
+        ? "Dá as boas-vindas de forma calorosa"
+        : "CONTINUA a conversa naturalmente SEM cumprimentar"
+    }.`;
   }
 
   private generateBirthDataSection(
@@ -405,15 +472,15 @@ Lembre-se: Você é uma especialista astróloga que cria mapas astrais precisos 
     }
 
     if (!birthDate) {
-      dataSection += "- ⚠️ DADO FALTANTE: Data de nascimento (ESSENCIAL)\n";
+      dataSection += "- ⚠️ DADO EM FALTA: Data de nascimento (ESSENCIAL)\n";
     }
     if (!birthTime) {
       dataSection +=
-        "- ⚠️ DADO FALTANTE: Hora de nascimento (importante para ascendente)\n";
+        "- ⚠️ DADO EM FALTA: Hora de nascimento (importante para ascendente)\n";
     }
     if (!birthPlace) {
       dataSection +=
-        "- ⚠️ DADO FALTANTE: Local de nascimento (necessário para precisão)\n";
+        "- ⚠️ DADO EM FALTA: Local de nascimento (necessário para precisão)\n";
     }
 
     return dataSection;
@@ -426,19 +493,19 @@ Lembre-se: Você é uma especialista astróloga que cria mapas astrais precisos 
       const day = date.getDate();
 
       if ((month === 3 && day >= 21) || (month === 4 && day <= 19))
-        return "Áries";
+        return "Carneiro";
       if ((month === 4 && day >= 20) || (month === 5 && day <= 20))
         return "Touro";
       if ((month === 5 && day >= 21) || (month === 6 && day <= 20))
-        return "Gêmeos";
+        return "Gémeos";
       if ((month === 6 && day >= 21) || (month === 7 && day <= 22))
-        return "Câncer";
+        return "Caranguejo";
       if ((month === 7 && day >= 23) || (month === 8 && day <= 22))
         return "Leão";
       if ((month === 8 && day >= 23) || (month === 9 && day <= 22))
         return "Virgem";
       if ((month === 9 && day >= 23) || (month === 10 && day <= 22))
-        return "Libra";
+        return "Balança";
       if ((month === 10 && day >= 23) || (month === 11 && day <= 21))
         return "Escorpião";
       if ((month === 11 && day >= 22) || (month === 12 && day <= 21))
@@ -461,7 +528,7 @@ Lembre-se: Você é uma especialista astróloga que cria mapas astrais precisos 
     userMessage: string
   ): void {
     if (!chartData) {
-      const error: ApiError = new Error("Dados do astrólogo necessários");
+      const error: ApiError = new Error("Dados da astróloga necessários");
       error.statusCode = 400;
       error.code = "MISSING_CHART_DATA";
       throw error;
@@ -472,7 +539,7 @@ Lembre-se: Você é uma especialista astróloga que cria mapas astrais precisos 
       typeof userMessage !== "string" ||
       userMessage.trim() === ""
     ) {
-      const error: ApiError = new Error("Mensagem do usuário necessária");
+      const error: ApiError = new Error("Mensagem do utilizador necessária");
       error.statusCode = 400;
       error.code = "MISSING_USER_MESSAGE";
       throw error;
@@ -480,7 +547,7 @@ Lembre-se: Você é uma especialista astróloga que cria mapas astrais precisos 
 
     if (userMessage.length > 1500) {
       const error: ApiError = new Error(
-        "A mensagem é muito longa (máximo 1500 caracteres)"
+        "A mensagem é demasiado longa (máximo 1500 caracteres)"
       );
       error.statusCode = 400;
       error.code = "MESSAGE_TOO_LONG";
@@ -502,7 +569,7 @@ Lembre-se: Você é uma especialista astróloga que cria mapas astrais precisos 
     } else if (error.status === 503) {
       statusCode = 503;
       errorMessage =
-        "O serviço está temporariamente sobrecarregado. Por favor, tente novamente em alguns minutos.";
+        "O serviço está temporariamente sobrecarregado. Por favor, tenta novamente dentro de alguns minutos.";
       errorCode = "SERVICE_OVERLOADED";
     } else if (
       error.message?.includes("quota") ||
@@ -510,11 +577,11 @@ Lembre-se: Você é uma especialista astróloga que cria mapas astrais precisos 
     ) {
       statusCode = 429;
       errorMessage =
-        "Limite de consultas atingido. Por favor, aguarde um momento.";
+        "Foi atingido o limite de consultas. Por favor, aguarda um momento.";
       errorCode = "QUOTA_EXCEEDED";
     } else if (error.message?.includes("safety")) {
       statusCode = 400;
-      errorMessage = "O conteúdo não atende às políticas de segurança.";
+      errorMessage = "O conteúdo não cumpre as políticas de segurança.";
       errorCode = "SAFETY_FILTER";
     } else if (error.message?.includes("API key")) {
       statusCode = 401;
@@ -528,7 +595,7 @@ Lembre-se: Você é uma especialista astróloga que cria mapas astrais precisos 
       errorCode = "ALL_MODELS_UNAVAILABLE";
     }
 
-    const errorResponse: ChatResponse = {
+    const errorResponse: BirthChartResponse = {
       success: false,
       error: errorMessage,
       code: errorCode,
@@ -550,15 +617,16 @@ Lembre-se: Você é uma especialista astróloga que cria mapas astrais precisos 
           title: "Cartógrafa Celestial",
           specialty: "Mapas astrais e análise astrológica completa",
           description:
-            "Astróloga especializada em criar e interpretar mapas natais precisos baseados em posições planetárias do momento do nascimento",
+            "Astróloga especializada em criar e interpretar mapas astrais precisos baseados nas posições planetárias do momento do nascimento",
           services: [
             "Criação de mapa astral completo",
             "Análise de posições planetárias",
             "Interpretação de casas astrológicas",
-            "Análise de aspectos planetários",
+            "Análise de aspetos planetários",
             "Determinação de ascendente e elementos dominantes",
           ],
         },
+        freeMessagesLimit: this.FREE_MESSAGES_LIMIT,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

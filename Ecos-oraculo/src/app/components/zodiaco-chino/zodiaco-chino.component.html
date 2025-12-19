@@ -265,15 +265,6 @@
         </div>
       </div>
     </div>
-    <app-fortune-wheel
-      [isVisible]="showFortuneWheel"
-      [prizes]="horoscopePrizes"
-      (onPrizeWon)="onPrizeWon($event)"
-      (onWheelClosed)="onWheelClosed()"
-    >
-    </app-fortune-wheel>
-
-    <!-- Backdrop para fechar modal ao clicar fora -->
     <div
       *ngIf="showPaymentModal"
       class="modal-backdrop"

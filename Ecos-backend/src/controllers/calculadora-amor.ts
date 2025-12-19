@@ -20,22 +20,28 @@ interface LoveCalculatorRequest {
     role: "user" | "love_expert";
     message: string;
   }>;
+  messageCount?: number;
+  isPremiumUser?: boolean;
+}
+
+interface LoveCalculatorResponse extends ChatResponse {
+  freeMessagesRemaining?: number;
+  showPaywall?: boolean;
+  paywallMessage?: string;
+  isCompleteResponse?: boolean;
 }
 
 export class LoveCalculatorController {
   private genAI: GoogleGenerativeAI;
 
-  // ✅ LISTA DE MODELOS DE BACKUP (em ordem de preferência)
- private readonly MODELS_FALLBACK = [
-    "gemini-2.5-flash-live",
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-preview-09-2025",
+  private readonly FREE_MESSAGES_LIMIT = 3;
+
+  private readonly MODELS_FALLBACK = [
     "gemini-2.5-flash-lite",
     "gemini-2.5-flash-lite-preview-09-2025",
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
   ];
-
 
   constructor() {
     if (!process.env.GEMINI_API_KEY) {
@@ -51,7 +57,9 @@ export class LoveCalculatorController {
     userMessage: string
   ): void {
     if (!loveCalculatorData) {
-      const error: ApiError = new Error("Dados da especialista em amor são obrigatórios");
+      const error: ApiError = new Error(
+        "Dados do especialista em amor necessários"
+      );
       error.statusCode = 400;
       error.code = "MISSING_LOVE_CALCULATOR_DATA";
       throw error;
@@ -62,7 +70,7 @@ export class LoveCalculatorController {
       typeof userMessage !== "string" ||
       userMessage.trim() === ""
     ) {
-      const error: ApiError = new Error("Mensagem do usuário é obrigatória");
+      const error: ApiError = new Error("Mensagem do utilizador necessária");
       error.statusCode = 400;
       error.code = "MISSING_USER_MESSAGE";
       throw error;
@@ -70,7 +78,7 @@ export class LoveCalculatorController {
 
     if (userMessage.length > 1200) {
       const error: ApiError = new Error(
-        "A mensagem é muito longa (máximo 1200 caracteres)"
+        "A mensagem é demasiado longa (máximo 1200 caracteres)"
       );
       error.statusCode = 400;
       error.code = "MESSAGE_TOO_LONG";
@@ -78,125 +86,189 @@ export class LoveCalculatorController {
     }
   }
 
+  private hasFullAccess(messageCount: number, isPremiumUser: boolean): boolean {
+    return isPremiumUser || messageCount <= this.FREE_MESSAGES_LIMIT;
+  }
+
+  // ✅ GANCHO SÓ EM PORTUGUÊS
+  private generateHookMessage(): string {
+    return `
+
+💔 **Espera! A tua análise de compatibilidade está quase pronta...**
+
+Detetei padrões muito interessantes nos números da tua relação, mas para te revelar:
+- 🔮 A **percentagem exata de compatibilidade**
+- 💕 Os **3 segredos** que farão a tua relação funcionar
+- ⚠️ O **desafio oculto** que devem superar juntos
+- 🌟 A **data especial** que marcará o vosso destino
+
+**Desbloqueia a tua análise completa agora** e descobre se estão destinados a ficar juntos.
+
+✨ *Milhares de casais já descobriram a sua compatibilidade real...*`;
+  }
+
+  // ✅ CONTEXTO SÓ EM PORTUGUÊS
   private createLoveCalculatorContext(
-    history?: Array<{ role: string; message: string }>
+    history?: Array<{ role: string; message: string }>,
+    isFullResponse: boolean = true
   ): string {
     const conversationContext =
       history && history.length > 0
         ? `\n\nCONVERSA ANTERIOR:\n${history
-            .map((h) => `${h.role === "user" ? "Usuário" : "Você"}: ${h.message}`)
+            .map(
+              (h) => `${h.role === "user" ? "Utilizador" : "Tu"}: ${h.message}`
+            )
             .join("\n")}\n`
         : "";
 
-    return `Você é Mestra Valentina, uma especialista em compatibilidade amorosa e relacionamentos baseada na numerologia do amor. Você tem décadas de experiência ajudando pessoas a entender a química e compatibilidade em seus relacionamentos através dos números sagrados do amor.
+    const responseTypeInstructions = isFullResponse
+      ? `
+📝 TIPO DE RESPOSTA: COMPLETA
+- Fornece uma análise COMPLETA e detalhada
+- Inclui TODOS os cálculos numerológicos
+- Dá conselhos específicos e acionáveis
+- Resposta de 400-700 palavras
+- Inclui percentagem exata de compatibilidade
+- Revela todos os segredos do casal`
+      : `
+📝 TIPO DE RESPOSTA: PARCIAL (TEASER)
+- Fornece uma análise INTRODUTÓRIA e intrigante
+- Menciona que detetaste padrões interessantes
+- INSINUA informação valiosa sem a revelar completamente
+- Resposta de 150-250 palavras no máximo
+- NÃO dês a percentagem exata de compatibilidade
+- NÃO reveles os segredos completos
+- Cria CURIOSIDADE e EXPECTATIVA
+- Termina de forma a que o utilizador queira saber mais
+- Usa frases como "Detetei algo muito interessante...", "Os números revelam um padrão fascinante que..."
+- NUNCA completes a análise, deixa-a em suspenso`;
 
-SUA IDENTIDADE COMO ESPECIALISTA EM AMOR:
+    return `És a Mestra Valentina, uma especialista em compatibilidade amorosa e relações baseada em numerologia do amor. Tens décadas de experiência a ajudar as pessoas a compreender a química e compatibilidade nas suas relações através dos números sagrados do amor.
+
+A TUA IDENTIDADE COMO ESPECIALISTA EM AMOR:
 - Nome: Mestra Valentina, a Guardiã do Amor Eterno
-- Origem: Especialista em numerologia do amor e relacionamentos cósmicos
+- Origem: Especialista em numerologia do amor e relações cósmicas
 - Especialidade: Compatibilidade numerológica, análise de casais, química amorosa
-- Experiência: Décadas analisando a compatibilidade através dos números do amor
+- Experiência: Décadas a analisar a compatibilidade através dos números do amor
 
-�🇷 VOCÊ RESPONDE SEMPRE EM PORTUGUÊS:
-- Você é uma especialista brasileira/portuguesa em numerologia do amor
-- SEMPRE responda em português brasileiro natural e acolhedor
-- Use expressões carinhosas típicas do português
-- Mantenha sua personalidade romântica brasileira
-- Nunca mude para outro idioma
-- Use gírias e expressões brasileiras quando apropriado
+${responseTypeInstructions}
 
-� EXEMPLOS DE SUAS EXPRESSÕES EM PORTUGUÊS:
-- "Os números do amor me revelam coisas incríveis..."
-- "Que conexão linda eu vejo aqui, que fofos!"
-- "A compatibilidade entre vocês é algo especial..."
-- "Olha só que energia amorosa eu sinto nessa união!"
-- "Meu coração fica quentinho vendo esse amor!"
+🗣️ IDIOMA:
+- RESPONDE SEMPRE em PORTUGUÊS DE PORTUGAL
+- Independentemente do idioma em que o utilizador escreva, TU respondes em português de Portugal
+- Usa vocabulário e expressões de Portugal (ex: "telemóvel" em vez de "celular", "autocarro" em vez de "ônibus")
 
-COMO VOCÊ DEVE SE COMPORTAR:
-
-💕 PERSONALIDADE ROMÂNTICA BRASILEIRA:
-- Fale com sabedoria amorosa mas de forma NATURAL e carinhosa como uma amiga brasileira
-- Use um tom caloroso, empático e romântico, como uma amiga que entende do amor
-- Evite cumprimentos formais - use cumprimentos naturais e brasileiros
-- Varie seus cumprimentos e respostas para que cada consulta seja única
-- Misture cálculos numerológicos com interpretações românticas mantendo proximidade
-- MOSTRE GENUÍNO INTERESSE PESSOAL nos relacionamentos das pessoas
-- Use expressões brasileiras carinhosas como "amor", "querido(a)", "meu bem"
+💕 PERSONALIDADE ROMÂNTICA:
+- Fala com sabedoria amorosa mas de forma NATURAL e conversacional
+- Usa um tom caloroso, empático e romântico
+- MOSTRA GENUÍNO INTERESSE PESSOAL nas relações das pessoas
+- Evita cumprimentos formais, usa cumprimentos naturais e calorosos
+- Varia as tuas respostas para que cada consulta se sinta única
 
 💖 PROCESSO DE ANÁLISE DE COMPATIBILIDADE:
-- PRIMEIRO: Se não tiver dados completos, peça com entusiasmo romântico
-- SEGUNDO: Calcule números relevantes de ambas as pessoas (caminho da vida, destino)
-- TERCEIRO: Analise compatibilidade numerológica de forma conversacional
-- QUARTO: Calcule pontuação de compatibilidade e explique seu significado
-- QUINTO: Ofereça conselhos para fortalecer o relacionamento baseados nos números
+- PRIMEIRO: Se não tens dados completos, pergunta por eles com entusiasmo romântico
+- SEGUNDO: Calcula números relevantes de ambas as pessoas (caminho de vida, destino)
+- TERCEIRO: Analisa compatibilidade numerológica de forma conversacional
+- QUARTO: ${
+      isFullResponse
+        ? "Calcula pontuação exata de compatibilidade e explica o seu significado"
+        : "INSINUA que tens a pontuação mas não a reveles"
+    }
+- QUINTO: ${
+      isFullResponse
+        ? "Oferece conselhos detalhados para fortalecer a relação"
+        : "Menciona que tens conselhos valiosos para partilhar"
+    }
 
-🔢 NÚMEROS QUE VOCÊ DEVE ANALISAR:
-- Número do Caminho da Vida de cada pessoa
+🔢 NÚMEROS QUE DEVES ANALISAR:
+- Número do Caminho de Vida de cada pessoa
 - Número do Destino de cada pessoa
-- Compatibilidade entre números da vida
-- Compatibilidade entre números do destino
+- Compatibilidade entre números de vida
+- Compatibilidade entre números de destino
 - Pontuação total de compatibilidade (0-100%)
-- Forças e desafios do casal
+- Pontos fortes e desafios do casal
 
 📊 CÁLCULOS DE COMPATIBILIDADE:
-- Use o sistema pitagórico para nomes
-- Some datas de nascimento para caminhos da vida
-- Compare diferenças entre números para avaliar compatibilidade
-- Explique como os números interagem no relacionamento
-- SEMPRE COMPLETE todos os cálculos que iniciar
-- Forneça pontuação específica de compatibilidade
+- Usa o sistema pitagórico para nomes
+- Soma datas de nascimento para caminhos de vida
+- Compara diferenças entre números para avaliar compatibilidade
+- Explica como os números interagem na relação
+- COMPLETA SEMPRE todos os cálculos que iniciares
+- ${
+      isFullResponse
+        ? "Fornece pontuação específica de compatibilidade"
+        : "Menciona que calculaste a compatibilidade sem revelar o número"
+    }
 
-🗣️ CUMPRIMENTOS E EXPRESSÕES EM PORTUGUÊS:
-- Cumprimentos: "Oi, querida!", "Que emocionante falar de amor!", "Adoro ajudar com assuntos do coração!", "Oi, meu bem!"
-- Transições: "Vamos ver o que os números do amor dizem...", "Isso é fascinante!", "Os números revelam algo lindo...", "Que energia gostosa!"
-- Para pedir dados: "Para fazer a análise de compatibilidade perfeita, preciso conhecer vocês dois. Pode me dar os nomes completos e datas de nascimento? Vai ser incrível!"
+💫 ESCALAS DE COMPATIBILIDADE:
+- 80-100%: "Conexão extraordinária!"
+- 60-79%: "Muito boa compatibilidade!"
+- 40-59%: "Compatibilidade média com grande potencial"
+- 20-39%: "Desafios que podem ser superados com amor"
+- 0-19%: "Precisam de trabalhar muito para se entenderem"
 
-💫 EXEMPLOS DE COMPATIBILIDADE EM PORTUGUÊS:
-- 80-100%: "Conexão extraordinária, meus amores! Vocês são perfeitos um para o outro!"
-- 60-79%: "Muito boa compatibilidade! Que coisa linda de se ver!"
-- 40-59%: "Compatibilidade média com grande potencial, só precisam se conhecer melhor!"
-- 20-39%: "Alguns desafios que podem ser superados com muito amor e paciência"
-- 0-19%: "Vocês precisam trabalhar bastante para se entender, mas amor verdadeiro move montanhas!"
-
-📋 COLETA DE DADOS EM PORTUGUÊS:
-"Para fazer uma análise de compatibilidade completa e maravilhosa, preciso dos nomes completos e datas de nascimento de vocês dois, queridos. Pode compartilhar comigo? Vai ser incrível descobrir os segredos do amor de vocês!"
+📋 RECOLHA DE DADOS:
+"Para fazer uma análise de compatibilidade completa, preciso dos nomes completos e datas de nascimento de ambos. Podes partilhá-los comigo?"
 
 ⚠️ REGRAS IMPORTANTES:
-- SEMPRE responda em português brasileiro
-- NUNCA use cumprimentos muito formais - seja natural e carinhosa
-- VARIE sua forma de se expressar em cada resposta
-- NÃO REPITA CONSTANTEMENTE os nomes - use naturalmente
-- SÓ CUMPRIMENTE NO PRIMEIRO CONTATO
-- SEMPRE peça dados completos de ambas as pessoas se faltarem
-- SEJA empática e use linguagem que qualquer pessoa entenda
-- Foque em orientação positiva para o relacionamento
-- DEMONSTRE CURIOSIDADE pela história de amor do casal
-- MANTENHA sua personalidade romântica brasileira
+- RESPONDE SEMPRE em português de Portugal
+- NUNCA uses cumprimentos demasiado formais
+- VARIA a tua forma de te expressares em cada resposta
+- NÃO REPITAS CONSTANTEMENTE os nomes - usa-os naturalmente
+- SÓ CUMPRIMENTA NO PRIMEIRO CONTACTO
+- PERGUNTA SEMPRE por dados completos de ambas as pessoas se faltarem
+- SÊ empática e usa linguagem que qualquer pessoa entenda
+- Foca-te em orientação positiva para a relação
+- DEMONSTRA CURIOSIDADE pela história de amor do casal
+- ${isFullResponse ? "COMPLETA TODA a análise" : "CRIA SUSPENSE e CURIOSIDADE"}
 
-- SEMPRE responda mesmo se o usuário tiver erros de ortografia ou escrita
-  - Interprete a mensagem do usuário mesmo que esteja mal escrita
-  - Não corrija os erros do usuário, simplesmente entenda a intenção
-  - Se não entender algo específico, pergunte de forma amigável
-  - Exemplos: "oi" = "oi", "q tal" = "que tal", "naum" = "não"
-  - NUNCA devolva respostas vazias por erros de escrita
+- RESPONDE SEMPRE independentemente de o utilizador ter erros ortográficos ou de escrita
+  - Interpreta a mensagem do utilizador mesmo que esteja mal escrita
+  - Não corrijas os erros do utilizador, simplesmente compreende a intenção
+  - Se não entenderes algo específico, pergunta de forma amigável
+  - Exemplos: "ola" = "olá", "k tal" = "que tal"
+  - NUNCA devolvas respostas vazias por erros de escrita
 
-🌹 ESTILO DE RESPOSTA NATURAL:
-- Respostas de 200-600 palavras que fluam naturalmente e SEJAM COMPLETAS
-- SEMPRE complete cálculos e interpretações de compatibilidade
-- Use seu estilo romântico brasileiro caloroso
-- Use expressões brasileiras carinhosas e naturais
+🌹 ESTILO DE RESPOSTA:
+- Respostas que fluam naturalmente e SEJAM COMPLETAS
+- ${
+      isFullResponse
+        ? "400-700 palavras com análise completa"
+        : "150-250 palavras criando intriga"
+    }
+- COMPLETA SEMPRE cálculos e interpretações conforme o tipo de resposta
 
 EXEMPLO DE COMO COMEÇAR:
-"Oi, querida! Adoro ajudar com assuntos do coração. Os números do amor têm segredos lindos para revelar sobre relacionamentos. Pode me contar sobre qual casal você gostaria que eu analisasse a compatibilidade? Vai ser uma delícia descobrir os segredos amorosos de vocês!"
+"Olá! Adoro ajudar com assuntos do coração. Os números do amor têm segredos maravilhosos para revelar sobre as relações. Contas-me de que casal queres que analise a compatibilidade?"
 
 ${conversationContext}
 
-Lembre-se: Você é uma especialista em amor que combina numerologia com conselhos românticos práticos. Fale como uma amiga brasileira calorosa que realmente se interessa pelos relacionamentos das pessoas. SEMPRE precisa de dados completos de ambas as pessoas para fazer uma análise significativa. As respostas devem ser calorosas, otimistas e focadas em fortalecer o amor, sempre em português brasileiro natural.`;
+Lembra-te: És uma especialista em amor que combina numerologia com conselhos românticos práticos. Fala como uma amiga calorosa que realmente se interessa pelas relações das pessoas. PRECISAS SEMPRE de dados completos de ambas as pessoas para fazer uma análise significativa. As respostas devem ser calorosas, otimistas e focadas em fortalecer o amor.`;
+  }
+
+  private createPartialResponse(fullText: string): string {
+    const sentences = fullText
+      .split(/[.!?]+/)
+      .filter((s) => s.trim().length > 0);
+
+    const teaserSentences = sentences.slice(0, Math.min(4, sentences.length));
+    let teaser = teaserSentences.join(". ").trim();
+
+    if (
+      !teaser.endsWith(".") &&
+      !teaser.endsWith("!") &&
+      !teaser.endsWith("?")
+    ) {
+      teaser += "...";
+    }
+
+    const hook = this.generateHookMessage();
+
+    return teaser + hook;
   }
 
   private ensureCompleteResponse(text: string): string {
     let processedText = text.trim();
-
-    // Remover possíveis marcadores de código ou formato incompleto
     processedText = processedText.replace(/```[\s\S]*?```/g, "").trim();
 
     const lastChar = processedText.slice(-1);
@@ -205,24 +277,18 @@ Lembre-se: Você é uma especialista em amor que combina numerologia com conselh
     );
 
     if (endsIncomplete && !processedText.endsWith("...")) {
-      // Buscar a última frase completa
       const sentences = processedText.split(/([.!?])/);
-
       if (sentences.length > 2) {
-        // Reconstruir até a última frase completa
         let completeText = "";
         for (let i = 0; i < sentences.length - 1; i += 2) {
           if (sentences[i].trim()) {
             completeText += sentences[i] + (sentences[i + 1] || ".");
           }
         }
-
         if (completeText.trim().length > 100) {
           return completeText.trim();
         }
       }
-
-      // Se não conseguir encontrar uma frase completa, adicionar fechamento apropriado
       processedText = processedText.trim() + "...";
     }
 
@@ -234,39 +300,58 @@ Lembre-se: Você é uma especialista em amor que combina numerologia com conselh
     res: Response
   ): Promise<void> => {
     try {
-      const { loveCalculatorData, userMessage }: LoveCalculatorRequest =
-        req.body;
+      const {
+        loveCalculatorData,
+        userMessage,
+        messageCount = 1,
+        isPremiumUser = false,
+      }: LoveCalculatorRequest = req.body;
 
       this.validateLoveCalculatorRequest(loveCalculatorData, userMessage);
 
-      const contextPrompt = this.createLoveCalculatorContext(
-        req.body.conversationHistory
+      const shouldGiveFullResponse = this.hasFullAccess(
+        messageCount,
+        isPremiumUser
       );
+      const freeMessagesRemaining = Math.max(
+        0,
+        this.FREE_MESSAGES_LIMIT - messageCount
+      );
+
+      console.log(
+        `📊 Message count: ${messageCount}, Premium: ${isPremiumUser}, Full response: ${shouldGiveFullResponse}`
+      );
+
+      const contextPrompt = this.createLoveCalculatorContext(
+        req.body.conversationHistory,
+        shouldGiveFullResponse
+      );
+
+      const responseInstructions = shouldGiveFullResponse
+        ? "Gera uma resposta COMPLETA e detalhada de 400-700 palavras com análise numerológica completa, percentagem de compatibilidade exata e conselhos específicos."
+        : "Gera uma resposta PARCIAL e INTRIGANTE de 150-250 palavras. INSINUA informação valiosa sem a revelar. Cria CURIOSIDADE. NÃO dês percentagens exatas. NÃO completes a análise.";
 
       const fullPrompt = `${contextPrompt}
 
-⚠️ INSTRUÇÕES CRÍTICAS OBRIGATÓRIAS:
-1. VOCÊ DEVE gerar uma resposta COMPLETA de 250-600 palavras
-2. NUNCA deixe uma resposta pela metade ou incompleta
-3. Se mencionar que vai fazer algo (calcular, analisar, explicar), DEVE completar
-4. Toda resposta DEVE terminar com uma conclusão clara e um ponto final
-5. Se detectar que sua resposta está sendo cortada, finalize a ideia atual com coerência
-6. SEMPRE mantenha o tom caloroso e romântico em português brasileiro
-7. Se a mensagem tiver erros ortográficos, interprete a intenção e responda normalmente
+⚠️ INSTRUÇÕES CRÍTICAS:
+${responseInstructions}
 
-Usuário: "${userMessage}"
+Utilizador: "${userMessage}"
 
-Resposta da especialista em amor (certifique-se de completar TODA sua análise antes de terminar):`;
+Resposta da especialista em amor (EM PORTUGUÊS DE PORTUGAL):`;
 
-      console.log(`Gerando análise de compatibilidade amorosa...`);
+      console.log(
+        `A gerar análise de compatibilidade amorosa (${
+          shouldGiveFullResponse ? "COMPLETA" : "PARCIAL"
+        })...`
+      );
 
-      // ✅ SISTEMA DE BACKUP: Tentar com múltiplos modelos
       let text = "";
       let usedModel = "";
       let allModelErrors: string[] = [];
 
       for (const modelName of this.MODELS_FALLBACK) {
-        console.log(`\n🔄 Tentando modelo: ${modelName}`);
+        console.log(`\n🔄 A tentar modelo: ${modelName}`);
 
         try {
           const model = this.genAI.getGenerativeModel({
@@ -275,7 +360,7 @@ Resposta da especialista em amor (certifique-se de completar TODA sua análise a
               temperature: 0.85,
               topK: 50,
               topP: 0.92,
-              maxOutputTokens: 1024,
+              maxOutputTokens: shouldGiveFullResponse ? 1024 : 512,
               candidateCount: 1,
               stopSequences: [],
             },
@@ -299,7 +384,6 @@ Resposta da especialista em amor (certifique-se de completar TODA sua análise a
             ],
           });
 
-          // ✅ TENTATIVAS para cada modelo (caso esteja temporariamente sobrecarregado)
           let attempts = 0;
           const maxAttempts = 3;
           let modelSucceeded = false;
@@ -315,33 +399,32 @@ Resposta da especialista em amor (certifique-se de completar TODA sua análise a
               const response = result.response;
               text = response.text();
 
-              // ✅ Validar que a resposta não esteja vazia e tenha comprimento mínimo
-              if (text && text.trim().length >= 100) {
+              const minLength = shouldGiveFullResponse ? 100 : 50;
+              if (text && text.trim().length >= minLength) {
                 console.log(
                   `  ✅ Sucesso com ${modelName} na tentativa ${attempts}`
                 );
                 usedModel = modelName;
                 modelSucceeded = true;
-                break; // Sair do while de tentativas
+                break;
               }
 
-              console.warn(`  ⚠️ Resposta muito curta, tentando novamente...`);
+              console.warn(
+                `  ⚠️ Resposta demasiado curta, a tentar novamente...`
+              );
               await new Promise((resolve) => setTimeout(resolve, 500));
             } catch (attemptError: any) {
               console.warn(
                 `  ❌ Tentativa ${attempts} falhou:`,
                 attemptError.message
               );
-
               if (attempts >= maxAttempts) {
                 allModelErrors.push(`${modelName}: ${attemptError.message}`);
               }
-
               await new Promise((resolve) => setTimeout(resolve, 500));
             }
           }
 
-          // Se este modelo teve sucesso, sair do loop de modelos
           if (modelSucceeded) {
             break;
           }
@@ -351,39 +434,45 @@ Resposta da especialista em amor (certifique-se de completar TODA sua análise a
             modelError.message
           );
           allModelErrors.push(`${modelName}: ${modelError.message}`);
-
-          // Esperar um pouco antes de tentar o próximo modelo
           await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
         }
       }
 
-      // ✅ Se todos os modelos falharam
       if (!text || text.trim() === "") {
         console.error("❌ Todos os modelos falharam. Erros:", allModelErrors);
         throw new Error(
-          `Todos os modelos de IA não estão disponíveis atualmente. Tentados: ${this.MODELS_FALLBACK.join(
-            ", "
-          )}. Por favor, tente novamente em um momento.`
+          `Todos os modelos de IA não estão disponíveis de momento. Por favor, tenta novamente dentro de momentos.`
         );
       }
 
-      // ✅ GARANTIR RESPOSTA COMPLETA E BEM FORMATADA
-      text = this.ensureCompleteResponse(text);
+      let finalResponse: string;
 
-      // ✅ Validação adicional de comprimento mínimo
-      if (text.trim().length < 100) {
-        throw new Error("Resposta gerada muito curta");
+      if (shouldGiveFullResponse) {
+        finalResponse = this.ensureCompleteResponse(text);
+      } else {
+        finalResponse = this.createPartialResponse(text);
       }
 
-      const chatResponse: ChatResponse = {
+      const chatResponse: LoveCalculatorResponse = {
         success: true,
-        response: text.trim(),
+        response: finalResponse.trim(),
         timestamp: new Date().toISOString(),
+        freeMessagesRemaining: freeMessagesRemaining,
+        showPaywall:
+          !shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT,
+        isCompleteResponse: shouldGiveFullResponse,
       };
 
+      if (!shouldGiveFullResponse && messageCount > this.FREE_MESSAGES_LIMIT) {
+        chatResponse.paywallMessage =
+          "Usaste as tuas 3 mensagens gratuitas. Desbloqueia acesso ilimitado para descobrires todos os segredos da tua compatibilidade!";
+      }
+
       console.log(
-        `✅ Análise de compatibilidade gerada com sucesso com ${usedModel} (${text.length} caracteres)`
+        `✅ Análise gerada (${
+          shouldGiveFullResponse ? "COMPLETA" : "PARCIAL"
+        }) com ${usedModel} (${finalResponse.length} caracteres)`
       );
       res.json(chatResponse);
     } catch (error) {
@@ -408,11 +497,11 @@ Resposta da especialista em amor (certifique-se de completar TODA sua análise a
     ) {
       statusCode = 429;
       errorMessage =
-        "Limite de consultas atingido. Por favor, aguarde um momento.";
+        "Foi atingido o limite de consultas. Por favor, aguarda um momento.";
       errorCode = "QUOTA_EXCEEDED";
     } else if (error.message?.includes("safety")) {
       statusCode = 400;
-      errorMessage = "O conteúdo não atende às políticas de segurança.";
+      errorMessage = "O conteúdo não cumpre as políticas de segurança.";
       errorCode = "SAFETY_FILTER";
     } else if (error.message?.includes("API key")) {
       statusCode = 401;
@@ -446,16 +535,17 @@ Resposta da especialista em amor (certifique-se de completar TODA sua análise a
         loveExpert: {
           name: "Mestra Valentina",
           title: "Guardiã do Amor Eterno",
-          specialty: "Compatibilidade numerológica e análise de relacionamentos",
+          specialty: "Compatibilidade numerológica e análise de relações",
           description:
             "Especialista em numerologia do amor especializada em analisar a compatibilidade entre casais",
           services: [
             "Análise de Compatibilidade Numerológica",
             "Cálculo de Números do Amor",
-            "Avaliação de Química do Casal",
-            "Conselhos para Fortalecer Relacionamentos",
+            "Avaliação de Química de Casal",
+            "Conselhos para Fortalecer Relações",
           ],
         },
+        freeMessagesLimit: this.FREE_MESSAGES_LIMIT,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
