@@ -1180,18 +1180,20 @@
   }
 }
 @media (max-width: 768px) {
+  /* ===== HERO SECTION ===== */
   .hero-section {
     flex-direction: column;
     text-align: center;
-    min-height: auto; /* ✅ Cambiar de 60vh a auto */
-    padding: 1rem 0 0 0; /* ✅ Reducir padding */
+    min-height: auto;
+    padding: 1rem 0;
+    gap: 1rem;
   }
 
   .hero-content {
-    flex: 1.2;
-    max-width: 700px;
-    padding-left: 0rem;
-    margin-bottom: 0; /* ✅ Eliminar margen inferior */
+    flex: 1;
+    max-width: 100%;
+    padding: 0 1rem;
+    margin-bottom: 0;
   }
 
   /* ✅ OCULTAR el logo en móvil */
@@ -1199,53 +1201,253 @@
     display: none;
   }
 
-  /* ✅ Reducir márgenes en los textos del hero */
+  /* ===== TEXTOS DEL HERO ===== */
+  .subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+
   .main-title {
-    font-size: 3.4rem;
-    font-family: "Berkshire Swash", cursive;
-    margin: 0.5rem 0; /* ✅ Reducir margen */
+    font-size: 2.5rem; /* ✅ Reducido de 3.4rem */
+    margin: 0.5rem 0;
+    line-height: 1.2;
+    white-space: normal; /* ✅ Permitir saltos de línea */
   }
 
   .description {
-    font-size: 1.6rem;
-    margin: 0.5rem 0; /* ✅ Reducir margen */
-    font-weight: 700;
-    font-family: "El Messiri", sans-serif;
+    font-size: 1.3rem; /* ✅ Reducido de 1.6rem */
+    margin: 0.5rem 0;
   }
 
   .services-text {
-    font-size: 1.3rem;
-    margin: 1rem 0 0.5rem 0; /* ✅ Reducir margen inferior */
+    font-size: 1rem; /* ✅ Reducido de 1.3rem */
+    line-height: 1.5;
+    margin: 1rem 0 0.5rem 0;
+    padding: 0 0.5rem;
   }
 
-  /* ✅ CENTRAR el título de servicios en móvil y pegarlo más */
+  .services-text2 {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0.5rem 0;
+    padding: 0 0.5rem;
+  }
+
+  .call-to-action {
+    font-size: 1.2rem; /* ✅ Reducido de 1.6rem */
+    margin-top: 1rem;
+  }
+
+  /* ===== SECCIÓN DE SERVICIOS ===== */
+  .services-section {
+    padding: 0 1rem;
+    margin-top: 1.5rem;
+  }
+
   .services-title {
     text-align: center;
     font-size: 2rem;
-    margin: 0.5rem 0 0.5rem 0; /* ✅ Reducir márgenes superior e inferior */
+    margin: 1rem 0 1rem 0; /* ✅ Mejor espaciado */
   }
 
   .services-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
-    padding: 0.5rem 0;
+    padding: 1rem 0;
+  }
+
+  .service-card {
+    min-height: 160px; /* ✅ Reducido de 200px */
+    padding: 1.5rem;
   }
 
   .service-icon {
-    width: 100px;
-    height: 100px;
-    margin: 0 auto 1.2rem;
+    width: 70px; /* ✅ Reducido de 100px */
+    height: 70px;
+    margin: 0 auto 1rem;
+  }
+
+  .service-card span {
+    font-size: 1.1rem; /* ✅ Reducido de 1.4rem */
   }
 
   .tarot-card .service-icon {
-    padding: 6px;
+    padding: 5px;
   }
 
   .horoscopo-card .service-icon {
-    padding: 4px;
+    padding: 3px;
   }
 
+  /* ===== CONTENT GENERAL ===== */
   .content {
-    padding: 1rem;
+    padding: 0.5rem;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer-section {
+    padding: 40px 0 30px 0;
+    min-height: 240px;
+    margin-top: 40px;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 25px;
+    text-align: center;
+    padding: 0 15px 30px 15px;
+  }
+
+  .footer-title {
+    font-size: 1.4rem;
+  }
+
+  .logo-image {
+    width: 80px;
+    height: 80px;
+  }
+
+  .contact-item {
+    padding: 10px 15px;
+  }
+
+  .contact-text {
+    font-size: 0.85rem;
+  }
+
+  .social-links {
+    gap: 12px;
+  }
+
+  .social-link {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+  }
+
+  .footer-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .footer-link {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+
+  /* ===== BUZÓN DE SUGERENCIAS ===== */
+  .suggestion-wrapper {
+    gap: 15px;
+  }
+
+  .suggestion-main-title {
+    font-size: 1.4rem;
+    margin: 0 0 10px 0;
+  }
+
+  .suggestion-input {
+    width: 100%;
+    max-width: 300px;
+    min-height: 70px;
+    font-size: 13px;
+  }
+
+  .suggestion-button {
+    width: 140px;
+    font-size: 13px;
+    padding: 8px 14px;
+  }
+
+  .character-counter {
+    font-size: 11px;
+  }
+
+  /* ===== BANNER DE COOKIES ===== */
+  .cookie-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+
+  .cookie-text {
+    min-width: 100%;
+  }
+
+  .cookie-text h4 {
+    font-size: 1.1rem;
+  }
+
+  .cookie-text p {
+    font-size: 0.85rem;
+  }
+
+  .cookie-buttons {
+    width: 100%;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-accept,
+  .btn-reject {
+    min-width: 100px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+}
+
+/* ===== RESPONSIVE EXTRA PEQUEÑO (max-width: 480px) ===== */
+@media (max-width: 480px) {
+  .main-title {
+    font-size: 2rem; /* ✅ Aún más pequeño */
+  }
+
+  .description {
+    font-size: 1.1rem;
+  }
+
+  .services-text,
+  .services-text2 {
+    font-size: 0.9rem;
+  }
+
+  .services-title {
+    font-size: 1.6rem;
+  }
+
+  .service-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .service-card span {
+    font-size: 1rem;
+  }
+
+  .service-card {
+    min-height: 140px;
+    padding: 1.2rem;
+  }
+
+  .footer-section {
+    padding: 35px 0 25px 0;
+  }
+
+  .footer-title {
+    font-size: 1.2rem;
+  }
+
+  .logo-image {
+    width: 60px;
+    height: 60px;
+  }
+
+  .suggestion-main-title {
+    font-size: 1.2rem;
+  }
+
+  .suggestion-input {
+    max-width: 260px;
+    min-height: 60px;
   }
 }
